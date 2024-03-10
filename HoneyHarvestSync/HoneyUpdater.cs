@@ -387,55 +387,12 @@ namespace HoneyHarvestSync
 			return false;
 		}
 
-		/// <summary>
-		///
-		/// *** DO NOT USE IN MOD - ONLY FOR COMPARISON TESTING ***
-		///
-		/// This is just the previous version of `IsWithinFlowerRange` because it runs slower.
-		/// It seems like it mostly comes down to the newer one's "diamond checking" part checking the larger rows first is what makes it faster,
-		/// since it should result in less overall checks.
-		/// </summary>
-		internal static bool IsWithinFlowerRangePreviousAlgorithm(Vector2 checkLocation, Vector2 flowerLocation)
-		{
-			// Start with a quick check to see if it's in a square of the radius size since that's much faster to check
-			if (!(checkLocation.X <= flowerLocation.X + flowerRange && checkLocation.X >= Math.Max(flowerLocation.X - flowerRange, 0)
-				&& checkLocation.Y <= flowerLocation.Y + flowerRange && checkLocation.Y >= Math.Max(flowerLocation.Y - flowerRange, 0)))
-			{
-				return false;
-			}
-
-			int yCheck = flowerRange;
-			int xCheck = 0;
-
-			// If the bee house is in the square of the flower radius, then now check that it's within the diamond shape that the radius actually uses.
-			for (int step = flowerRange * 2; step >= 0; step--)
-			{
-				// Check each horizontal strip from the top of the diamond to the bottom
-				if (checkLocation.Y == Math.Max(flowerLocation.Y + yCheck, 0)
-					&& checkLocation.X >= Math.Max(flowerLocation.X - xCheck, 0)
-					&& checkLocation.X <= flowerLocation.X + xCheck
-				)
-				{
-					return true;
-				}
-
-				// We start at max Y above the flower's location and work our way down, basically checking each horizontal row of tiles.
-				yCheck -= 1;
-
-				// We start at the top tip of the diamond and grow the tiles we check horizontally each step downwards,
-				// then once we pass the middle of the diamond we shrink the number we check back down.
-				xCheck += yCheck >= 0 ? 1 : -1;
-			}
-
-			return false;
-		}
-
 		internal static void TestIsWithinFlowerRange(bool shouldTestDebugLocations = true, bool shouldTestRandomLocations = false)
 		{
 			// NOTE - If testing this function elsewhere (such as https://dotnetfiddle.net), will need to include
 			// the 'MonoGame.Framework.Gtk' v3.8.0 Nuget package, add `using Microsoft.Xna.Framework;`, and declare the `flowerRange` const int.
 
-			// This location should be at least double `flowerRange` for both axis to not break the below debug locations.
+			// This location should have at least double the `flowerRange` value for both axis to not break the below debug locations.
 			Vector2 flower = new(flowerRange * 2, flowerRange * 2);
 
 			// Debug Locations - these should show whether the algorithm is working or not
@@ -492,7 +449,7 @@ namespace HoneyHarvestSync
 			int maxX = Convert.ToInt32(flower.X) + maxDistanceAway;
 			int minY = Math.Max(Convert.ToInt32(flower.Y) - maxDistanceAway, 0);
 			int maxY = Convert.ToInt32(flower.Y) + maxDistanceAway;
-			Random rand = new Random();
+			Random rand = new();
 
 			for (int i = 0; i < 50; i++)
 			{
@@ -510,7 +467,7 @@ namespace HoneyHarvestSync
 
 			if (shouldTestDebugLocations)
 			{
-				Console.WriteLine("DEBUG LOCATIONS\n-- New Algorithm --\n-  Within Diamond  -");
+				Console.WriteLine("DEBUG LOCATIONS\n-- Within Diamond --");
 				foreach (Vector2 test in insideDiamondLocations)
 				{
 					bool result = IsWithinFlowerRange(test, flower);
@@ -526,7 +483,7 @@ namespace HoneyHarvestSync
 					fails.Clear();
 				}
 
-				Console.WriteLine("\n-  Outside Diamond, but Inside Square  -");
+				Console.WriteLine("\n-- Outside Diamond, but Inside Square --");
 				foreach (Vector2 test in outsideDiamondInsideSquareLocations)
 				{
 					bool result = IsWithinFlowerRange(test, flower);
@@ -542,63 +499,10 @@ namespace HoneyHarvestSync
 					fails.Clear();
 				}
 
-				Console.WriteLine("\n-  Outside Square  -");
+				Console.WriteLine("\n-- Outside Square --");
 				foreach (Vector2 test in outsideSquareLocations)
 				{
 					bool result = IsWithinFlowerRange(test, flower);
-
-					if (result)
-					{
-						fails.Add($"{test}");
-					}
-				}
-				if (fails.Count > 0)
-				{
-					Console.WriteLine($"FAILS: {String.Join(" | ", fails)}");
-					fails.Clear();
-				}
-
-				sw.Stop();
-				Console.WriteLine($"\nTested {insideDiamondLocations.Count + outsideDiamondInsideSquareLocations.Count + outsideSquareLocations.Count} locations in {sw.ElapsedTicks} ticks ({sw.ElapsedMilliseconds}ms)");
-
-				sw.Start();
-
-				Console.WriteLine("\n\n-- Previous Algorithm --\n-  Within Diamond  -");
-				foreach (Vector2 test in insideDiamondLocations)
-				{
-					bool result = IsWithinFlowerRangePreviousAlgorithm(test, flower);
-
-					if (!result)
-					{
-						fails.Add($"{test}");
-					}
-				}
-				if (fails.Count > 0)
-				{
-					Console.WriteLine($"FAILS: {String.Join(" | ", fails)}");
-					fails.Clear();
-				}
-
-				Console.WriteLine("\n-  Outside Diamond, but Inside Square  -");
-				foreach (Vector2 test in outsideDiamondInsideSquareLocations)
-				{
-					bool result = IsWithinFlowerRangePreviousAlgorithm(test, flower);
-
-					if (result)
-					{
-						fails.Add($"{test}");
-					}
-				}
-				if (fails.Count > 0)
-				{
-					Console.WriteLine($"FAILS: {String.Join(" | ", fails)}");
-					fails.Clear();
-				}
-
-				Console.WriteLine("\n-  Outside Square  -");
-				foreach (Vector2 test in outsideSquareLocations)
-				{
-					bool result = IsWithinFlowerRangePreviousAlgorithm(test, flower);
 
 					if (result)
 					{
@@ -622,34 +526,10 @@ namespace HoneyHarvestSync
 					sw.Start();
 				}
 
-				Console.WriteLine("\n\nRANDOMLY GENERATED LOCATIONS\n-- New Algorithm --");
+				Console.WriteLine("\n\nRANDOMLY GENERATED LOCATIONS");
 				foreach (Vector2 test in randomLocations)
 				{
 					bool result = IsWithinFlowerRange(test, flower);
-
-					if (result)
-					{
-						ins.Add($"{test}");
-					}
-					else
-					{
-						outs.Add($"{test}");
-					}
-				}
-				sw.Stop();
-
-				Console.WriteLine($"Tested {randomLocations.Count} randomly generated locations in {sw.ElapsedTicks} ticks ({sw.ElapsedMilliseconds}ms)");
-				Console.WriteLine($"Ins: {ins.Count} | Outs: {outs.Count}");
-
-				ins.Clear();
-				outs.Clear();
-
-				sw.Start();
-
-				Console.WriteLine("\n-- Previous Algorithm --");
-				foreach (Vector2 test in randomLocations)
-				{
-					bool result = IsWithinFlowerRangePreviousAlgorithm(test, flower);
 
 					if (result)
 					{
