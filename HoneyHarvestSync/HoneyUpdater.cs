@@ -11,7 +11,7 @@ using Microsoft.Xna.Framework;
 
 namespace HoneyHarvestSync
 {
-	internal static class HoneyUpdater
+	public static class HoneyUpdater
 	{
 		/// <summary>Should be set as a refence to the Mod's monitor before anything in here is called (or set as event handlers) so we can do logging.</summary>
 		internal static IMonitor Monitor { get; set; }
@@ -258,6 +258,24 @@ namespace HoneyHarvestSync
 		}
 
 		/// <summary>
+		/// Refresh the held object in all ready-for-harvest bee houses.
+		/// This will refresh the icon shown overtop the bee houses.
+		/// This can be used in cases such as if the bee houses should now be showing a different icon
+		/// due to a config value that would affect the assigned item being changed.
+		/// </summary>
+		public static void RefreshBeeHouseHeldObjects()
+		{
+			DebugLog($"{nameof(RefreshBeeHouseHeldObjects)} - Started");
+
+			foreach (KeyValuePair<GameLocation, List<SObject>> kvp in beeHousesReady)
+			{
+				UpdateLocationBeeHouses(kvp.Key, kvp.Value);
+			}
+
+			DebugLog($"{nameof(RefreshBeeHouseHeldObjects)} - Ended");
+		}
+
+		/// <summary>
 		/// Updates the honey held by the given ready-for-harvest bee houses, which are at the given location.
 		/// This also adds any nearby flowers to our tracked list of them.
 		/// </summary>
@@ -281,16 +299,44 @@ namespace HoneyHarvestSync
 
 				// Same flower check the game uses when collecting the honey out of the bee house
 				Crop closeFlower = Utility.findCloseFlower(location, beeHouse.TileLocation, flowerRange, (Crop crop) => (!crop.forageCrop.Value) ? true : false);
+				SObject heldObject = null;
 
-				// We set the held honey either to the default (in case we are changing it back, such as if all nearby flowers were harvested),
-				// or to what the farmer will receive at time of harvest when full-grown flower(s) are nearby enough.
-				// The game will overwrite what we've set here, so we won't affect the actually-harvested honey object in any way.
-				beeHouse.heldObject.Value.name = closeFlower == null
-					? "Wild Honey"
-					: $"{Game1.objectInformation[closeFlower.indexOfHarvest.Value].Split('/')[0]} Honey";
-				beeHouse.heldObject.Value.preservedParentSheetIndex.Value = closeFlower == null
-					? honeyItemID
-					: closeFlower.indexOfHarvest.Value;
+				if (closeFlower == null)
+				{
+					// We set the held object to the default when we are changing it back, such as if all nearby flowers were harvested.
+					heldObject = new SObject(honeyItemID, 1) { name = "Wild Honey" };
+				}
+				else
+				{
+					switch (ModEntry.Config.BeeHouseReadyIconEnum)
+					{
+						case ModConfig.ReadyIcon.Honey:
+							// Create a honey object of the flavored/artisan honey the farmer will receive at time of harvest due to the nearby flower.
+							heldObject = new SObject(honeyItemID, 1);
+							heldObject.name = $"{Game1.objectInformation[closeFlower.indexOfHarvest.Value].Split('/')[0]} Honey";
+							heldObject.preservedParentSheetIndex.Value = closeFlower.indexOfHarvest.Value;
+
+							break;
+
+						case ModConfig.ReadyIcon.Flower:
+						default:
+							// Create a flower object to represent the nearby flower that will flavor the honey at harvest time.
+							heldObject = new SObject(closeFlower.indexOfHarvest.Value, 1);
+
+							break;
+					}
+				}
+
+				if (heldObject == null)
+				{
+					Monitor.Log($"{DateTime.Now}.{DateTime.Now:ffffff} {nameof(HoneyUpdater)} {nameof(UpdateLocationBeeHouses)} - "
+						+ $"Failed to create the {(closeFlower == null ? ModEntry.Config.BeeHouseReadyIcon : "default honey")} object for the bee house to have as its held object", LogLevel.Warn);
+				}
+				else
+				{
+					// The game will overwrite what we've set here with its own new object at harvest time, so this won't affect the actually-harvested object in any way.
+					beeHouse.heldObject.Value = heldObject;
+				}
 
 				if (closeFlower != null)
 				{
