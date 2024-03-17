@@ -104,9 +104,7 @@ namespace HoneyHarvestSync
 
 				if (newlyReadyBeeHouses.Count == 0)
 				{
-					DebugLog($"{nameof(OnTimeChanged)} - Ended");
-
-					return;
+					continue;
 				}
 
 				DebugLog($"{nameof(OnTimeChanged)} - Found {newlyReadyBeeHouses.Count} newly ready bee houses @ {entry.Key.Name} location");
@@ -299,6 +297,20 @@ namespace HoneyHarvestSync
 
 				// Same flower check the game uses when collecting the honey out of the bee house
 				Crop closeFlower = Utility.findCloseFlower(location, beeHouse.TileLocation, flowerRange, (Crop crop) => (!crop.forageCrop.Value) ? true : false);
+
+
+				beeHouse.heldObject.Value.name = closeFlower == null
+					? "Wild Honey"
+					: $"{Game1.objectInformation[closeFlower.indexOfHarvest.Value].Split('/')[0]} Honey";
+				beeHouse.heldObject.Value.preservedParentSheetIndex.Value = closeFlower == null
+					? honeyItemID
+					: closeFlower.indexOfHarvest.Value;
+
+
+				/*
+				 * TEMP REVERT - Stardew Valley v1.5 DOES NOT create a new object to give to the player upon harvest; that is ONLY v1.6+, so cannot (easily) backport the "show flower" feature.
+				 * 
+				
 				SObject heldObject = null;
 
 				if (closeFlower == null)
@@ -337,6 +349,7 @@ namespace HoneyHarvestSync
 					// The game will overwrite what we've set here with its own new object at harvest time, so this won't affect the actually-harvested object in any way.
 					beeHouse.heldObject.Value = heldObject;
 				}
+				*/
 
 				if (closeFlower != null)
 				{
