@@ -305,27 +305,27 @@ namespace HoneyHarvestSync
 					if (flowerIngredientID == null)
 					{
 						Monitor.Log($"Failed to get the qualified item ID of a nearby flower from the flower's `indexOfHarvest.Value` value of '{closeFlower.indexOfHarvest.Value}'.", LogLevel.Warn);
-				}
-				else
-				{
+					}
+					else
+					{
 						string itemCreationFailureMessage = $"Failed to create an `Item` (and then convert it to `Object`) via `ItemRegistry.Create` using a nearby flower's qualified item ID of '{flowerIngredientID}'.";
 
 						// `StardewValley.Internal.ItemQueryResolver.ItemQueryResolver.DefaultResolvers.FLAVORED_ITEM()` has this in a `try/catch`, so mimicking that here 
 						try
-					{
+						{
 							// If this comes back as `null` or the conversion fails (resulting in `null`), that's fine since we'll just get "Wild Honey" back when we attempt to create flavored honey below.
 							flowerIngredient = ItemRegistry.Create(flowerIngredientID) as SObject;
 
 							if (flowerIngredient == null)
 							{
 								Monitor.Log(itemCreationFailureMessage, LogLevel.Warn);
-					}
-				}
+							}
+						}
 						catch (Exception ex)
-				{
+						{
 							Monitor.Log(itemCreationFailureMessage + $"\n\nException ({ex.GetType().Name}): {ex.Message}", LogLevel.Error);
-				}
-				}
+						}
+					}
 				}
 
 				/*
