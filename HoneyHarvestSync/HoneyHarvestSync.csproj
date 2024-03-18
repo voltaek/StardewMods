@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <Authors>voltaek</Authors>
-    <Version>2.0.0-alpha.sd160.1</Version>
+    <Version>2.0.0-alpha.sd160.2</Version>
     <Description>Ready-for-harvest bee houses show the flower that will flavor its honey or the artisan honey you'll receive.</Description>
     <UniqueId>voltaek.HoneyHarvestSync</UniqueId>
     <MinimumApiVersion_Behavior>Update</MinimumApiVersion_Behavior>
