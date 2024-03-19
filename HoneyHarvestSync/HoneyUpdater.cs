@@ -1,10 +1,7 @@
 ﻿using Microsoft.Xna.Framework;
-using StardewModdingAPI;
 using StardewModdingAPI.Events;
-using StardewValley;
 using StardewValley.ItemTypeDefinitions;
 using StardewValley.TerrainFeatures;
-using SObject = StardewValley.Object;
 using System;
 using System.Collections.Generic;
 using System.Linq;

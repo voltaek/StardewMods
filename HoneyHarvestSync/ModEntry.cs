@@ -1,5 +1,4 @@
 ﻿using GenericModConfigMenu;
-using StardewModdingAPI;
 using StardewModdingAPI.Events;
 using System;
 using System.Collections.Generic;
