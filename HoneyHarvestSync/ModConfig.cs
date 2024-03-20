@@ -1,5 +1,4 @@
-﻿using StardewModdingAPI.Events;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -15,27 +14,21 @@ namespace HoneyHarvestSync
 			Honey
 		}
 
-		// TEMP FORCE HONEY UNTIL SD v1.6
-		//private const ReadyIcon defaultBeeHouseReadyIcon = ReadyIcon.Flower;
-		private const ReadyIcon defaultBeeHouseReadyIcon = ReadyIcon.Honey;
+		private const ReadyIcon defaultBeeHouseReadyIcon = ReadyIcon.Flower;
 
 		internal ReadyIcon BeeHouseReadyIconEnum { get; private set; } = defaultBeeHouseReadyIcon;
 		public string BeeHouseReadyIcon
 		{
-			// get => Enum.GetName(BeeHouseReadyIconEnum);
-			// TEMP FORCE HONEY UNTIL SD v1.6
-			get => Enum.GetName(defaultBeeHouseReadyIcon);
+			get => Enum.GetName(BeeHouseReadyIconEnum);
 
 			set
 			{
-				/* TEMP FORCE HONEY UNTIL SD v1.6
 				if (Enum.TryParse(value, true, out ReadyIcon parsed))
 				{
 					BeeHouseReadyIconEnum = parsed;
 
 					return;
 				}
-				*/
 
 				BeeHouseReadyIconEnum = defaultBeeHouseReadyIcon;
 			}
