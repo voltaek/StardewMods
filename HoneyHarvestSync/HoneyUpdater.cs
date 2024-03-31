@@ -33,8 +33,10 @@ namespace HoneyHarvestSync
 		private static readonly Func<GameLocation, bool> isLocationWithBeeHouses = (location) => location.IsOutdoors && location.Objects.Values.Any(x => x.QualifiedItemId == beeHouseQualifiedItemID);
 
 		// Tracking lists for bee houses and flowers nearby them that we refresh each day.
+
 		private static readonly Dictionary<GameLocation, List<SObject>> beeHousesReady = new();
 		private static readonly Dictionary<GameLocation, List<SObject>> beeHousesReadyToday = new();
+		// Do not trust the items in this; they may have become `null`.
 		private static readonly HashSet<HoeDirt> nearbyFlowerDirts = new();
 
 		// Shorthand method for creating a debug log entry.
@@ -48,7 +50,7 @@ namespace HoneyHarvestSync
 		private static string GetVerboseStart
 		{
 			// Show microsecond, so we can tell if something is slow.
-			get { return Monitor.IsVerbose ? $"{DateTime.Now:ffffff} {nameof(HoneyUpdater)} " : String.Empty; }
+			get { return Monitor.IsVerbose ? $"{DateTime.Now:ffffff} {nameof(HoneyUpdater)}" : String.Empty; }
 		}
 
 		/// <summary>Event handler for after a new day starts.</summary>
@@ -112,6 +114,15 @@ namespace HoneyHarvestSync
 		/// <param name="e">The event arguments.</param>
 		internal static void OnOneSecondUpdateTicked(object sender, OneSecondUpdateTickedEventArgs e)
 		{
+			int dirtRemoved = nearbyFlowerDirts.RemoveWhere(x => x == null);
+
+			if (dirtRemoved > 0)
+			{
+				Monitor.LogOnce($"{nameof(HoneyUpdater)} {nameof(OnOneSecondUpdateTicked)} Removed {dirtRemoved} `null` flower crop HoeDirt from tracking"
+					+ $" (future duplicates of this log message will only appear in the log file itself)", LogLevel.Info);
+				Monitor.Log($"{nameof(HoneyUpdater)} {nameof(OnOneSecondUpdateTicked)} Removed {dirtRemoved} `null` flower crop HoeDirt from tracking", LogLevel.Trace);
+			}
+
 			// Check if flowers that would affect the honey produced by nearby bee houses have been harvested.
 			List<HoeDirt> flowerlessDirts = nearbyFlowerDirts.Where(x => x.crop == null).ToList();
 
@@ -126,8 +137,10 @@ namespace HoneyHarvestSync
 			// Remove the flower tile(s) from being tracked
 			nearbyFlowerDirts.RemoveWhere(flowerlessDirts.Contains);
 
+			// Track bee houses we've already updated in this following loop so we only update them each once
 			Dictionary<GameLocation, List<SObject>> updatedBeeHouses = new();
 
+			// Update all bee houses near the removed dirt(s)
 			foreach (HoeDirt flowerlessDirt in flowerlessDirts)
 			{
 				if (!beeHousesReady.ContainsKey(flowerlessDirt.Location))
@@ -146,6 +159,8 @@ namespace HoneyHarvestSync
 					continue;
 				}
 
+				DebugLog($"{nameof(OnOneSecondUpdateTicked)} - Found {beeHousesToUpdate.Count} ready bee houses that need updating @ {flowerlessDirt.Location.Name} location.");
+
 				UpdateLocationBeeHouses(flowerlessDirt.Location, beeHousesToUpdate);
 				
 				if (!updatedBeeHouses.ContainsKey(flowerlessDirt.Location))
@@ -156,7 +171,6 @@ namespace HoneyHarvestSync
 				// Track any bee houses we've updated already to prevent duplicate updates
 				updatedBeeHouses[flowerlessDirt.Location].AddRange(beeHousesToUpdate);
 
-				DebugLog($"{nameof(OnOneSecondUpdateTicked)} - Found {beeHousesToUpdate.Count} ready bee houses that needed updating @ {flowerlessDirt.Location.Name} location.");
 				Monitor.VerboseLog($"{GetVerboseStart} {nameof(OnOneSecondUpdateTicked)} - Updated bee house details: {String.Join(" | ", beeHousesToUpdate.Select(x => x.TileLocation))}");
 			}
 		}
@@ -233,6 +247,15 @@ namespace HoneyHarvestSync
 				beeHousesReadyToday.Remove(location);
 			}
 
+			int dirtRemoved = nearbyFlowerDirts.RemoveWhere(x => x == null);
+
+			if (dirtRemoved > 0)
+			{
+				Monitor.LogOnce($"{nameof(HoneyUpdater)} {nameof(RemoveLocationFromTracking)} Removed {dirtRemoved} `null` flower crop HoeDirt from tracking"
+					+ $" (future duplicates of this log message will only appear in the log file itself)", LogLevel.Info);
+				Monitor.Log($"{nameof(HoneyUpdater)} {nameof(RemoveLocationFromTracking)} Removed {dirtRemoved} `null` flower crop HoeDirt from tracking", LogLevel.Trace);
+			}
+
 			nearbyFlowerDirts.RemoveWhere(x => x.Location == location);
 		}
 
@@ -266,6 +289,7 @@ namespace HoneyHarvestSync
 
 			ObjectDataDefinition objectData = ItemRegistry.GetObjectTypeDefinition();
 			List<SObject> invalidBeeHouses = new();
+			int newlyTrackedFlowerDirtCount = 0;
 
 			foreach (SObject beeHouse in readyBeeHouses)
 			{
@@ -289,6 +313,7 @@ namespace HoneyHarvestSync
 				// Same flower check the game uses (see `MachineDataUtility.GetNearbyFlowerItemId()`) when collecting the honey out of the bee house
 				Crop closeFlower = Utility.findCloseFlower(location, beeHouse.TileLocation, flowerRange, (Crop crop) => !crop.forageCrop.Value);
 				SObject flowerIngredient = null;
+				string flowerName = String.Empty;
 
 				// If we found a qualifying flower crop, then get its harvested object form.
 				if (closeFlower != null)
@@ -313,6 +338,10 @@ namespace HoneyHarvestSync
 							{
 								Monitor.Log(itemCreationFailureMessage, LogLevel.Warn);
 							}
+							else
+							{
+								flowerName = flowerIngredient.Name;
+							}
 						}
 						catch (Exception ex)
 						{
@@ -320,10 +349,18 @@ namespace HoneyHarvestSync
 						}
 					}
 
-					// Track the tile location of the `HoeDirt` that holds the flower's `Crop` object so we can watch for it being harvested later.
-					if (nearbyFlowerDirts.Add(closeFlower.Dirt))
+					if (closeFlower.Dirt == null)
 					{
-						Monitor.VerboseLog($"{GetVerboseStart} Now tracking nearby grown flower via its dirt with tile {closeFlower.Dirt.Tile} affecting bee house @ {beeHouse.TileLocation} tile @ {location.Name} location");
+						Monitor.Log($"Flower crop {(String.IsNullOrEmpty(flowerName) ? String.Empty : $"({flowerName}) ")}has a `null` 'Dirt' property. Will be unable to track if this flower gets harvested. "
+							+ $"(Bee House Tile {beeHouse.TileLocation} and {location.Name} location)", LogLevel.Info);
+					}
+					// Track the tile location of the `HoeDirt` that holds the flower's `Crop` object so we can watch for it being harvested later.
+					else if (nearbyFlowerDirts.Add(closeFlower.Dirt))
+					{
+						newlyTrackedFlowerDirtCount += 1;
+
+						Monitor.VerboseLog($"{GetVerboseStart} Now tracking nearby grown flower {(String.IsNullOrEmpty(flowerName) ? String.Empty : $"({flowerName}) ")}"
+							+ $"via its dirt with tile {closeFlower.Dirt.Tile} affecting bee house @ {beeHouse.TileLocation} tile @ {location.Name} location");
 					}
 				}
 
@@ -352,6 +389,10 @@ namespace HoneyHarvestSync
 			// Remove any invalid bee houses from the given list
 			readyBeeHouses.RemoveAll(x => invalidBeeHouses.Contains(x));
 
+			DebugLog($"{nameof(UpdateLocationBeeHouses)} - Updated {readyBeeHouses.Count} ready bee houses "
+				+ (newlyTrackedFlowerDirtCount > 0 ? $"and now tracking {newlyTrackedFlowerDirtCount} additional nearby flowers" : String.Empty)
+				+ $" @ {location.Name} location");
+
 			Monitor.VerboseLog($"{GetVerboseStart} {nameof(UpdateLocationBeeHouses)} - Ended");
 		}
 
@@ -368,19 +409,17 @@ namespace HoneyHarvestSync
 
 			if (ready.Count > 0)
 			{
+				DebugLog($"{nameof(AddLocation)} - Found {ready.Count} ready bee houses @ {location.Name} location");
+
 				beeHousesReady.Add(location, ready);
 				UpdateLocationBeeHouses(location, ready);
-
-				DebugLog($"{nameof(AddLocation)} - Found and updated {ready.Count} ready bee houses "
-					+ (nearbyFlowerDirts.Any(x => x.Location == location) ? $"and {nearbyFlowerDirts.Count(x => x.Location == location)} nearby flowers" : String.Empty)
-					+ $" @ {location.Name} location");
 			}
 
 			if (readyToday.Count > 0)
 			{
-				beeHousesReadyToday.Add(location, readyToday);
+				DebugLog($"{nameof(AddLocation)} - Found {readyToday.Count} bee houses that will be ready today @ {location.Name} location");
 
-				DebugLog($"{nameof(AddLocation)} - Found {ready.Count} bee houses that will be ready today @ {location.Name} location");
+				beeHousesReadyToday.Add(location, readyToday);
 			}
 		}
 

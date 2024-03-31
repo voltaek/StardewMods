@@ -9,7 +9,7 @@
   "UniqueID": "voltaek.HoneyHarvestSync",
   "Name": "Honey Harvest Sync",
   "Author": "voltaek",
-  "Version": "2.0.0",
+  "Version": "2.0.1",
   "Description": "Ready-for-harvest bee houses show the flower that will flavor its honey or the artisan honey you'll receive.",
   "MinimumApiVersion": "4.0",
   "EntryDll": "HoneyHarvestSync.dll",
