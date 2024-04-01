@@ -39,18 +39,22 @@ namespace HoneyHarvestSync
 		// Do not trust the items in this; they may have become `null`.
 		private static readonly HashSet<HoeDirt> nearbyFlowerDirts = new();
 
-		// Shorthand method for creating a debug log entry.
-		private static void DebugLog(string message)
-		{
-			Monitor.Log($"{nameof(HoneyUpdater)} {message}", LogLevel.Debug);
-		}
+		// For debug builds, show log messages as DEBUG so they show in the SMAPI console.
+		#if DEBUG
+		private const LogLevel logLevel = LogLevel.Debug;
+		#else
+		private const LogLevel logLevel = LogLevel.Trace;
+		#endif
+
+		// Shorthand method for creating a standard log entry.
+		private static void Log(string message) => Monitor.Log(message, logLevel);
 
 		// Shorthand property for creating a verbose log entry header.
 		// We want to use the verbose log method directly for best performance, both when actually using verbose and not.
 		private static string GetVerboseStart
 		{
 			// Show microsecond, so we can tell if something is slow.
-			get { return Monitor.IsVerbose ? $"{DateTime.Now:ffffff} {nameof(HoneyUpdater)}" : String.Empty; }
+			get { return Monitor.IsVerbose ? DateTime.Now.ToString("ffffff") : String.Empty; }
 		}
 
 		/// <summary>Event handler for after a new day starts.</summary>
@@ -95,7 +99,7 @@ namespace HoneyHarvestSync
 					continue;
 				}
 
-				DebugLog($"{nameof(OnTimeChanged)} - Found {newlyReadyBeeHouses.Count} newly ready bee houses @ {entry.Key.Name} location");
+				Log($"{nameof(OnTimeChanged)} - Found {newlyReadyBeeHouses.Count} newly ready bee houses @ {entry.Key.Name} location");
 
 				UpdateLocationBeeHouses(entry.Key, newlyReadyBeeHouses);
 
@@ -120,7 +124,8 @@ namespace HoneyHarvestSync
 			{
 				Monitor.LogOnce($"{nameof(HoneyUpdater)} {nameof(OnOneSecondUpdateTicked)} Removed {dirtRemoved} `null` flower crop HoeDirt from tracking"
 					+ $" (future duplicates of this log message will only appear in the log file itself)", LogLevel.Info);
-				Monitor.Log($"{nameof(HoneyUpdater)} {nameof(OnOneSecondUpdateTicked)} Removed {dirtRemoved} `null` flower crop HoeDirt from tracking", LogLevel.Trace);
+
+				Log($"{nameof(HoneyUpdater)} {nameof(OnOneSecondUpdateTicked)} Removed {dirtRemoved} `null` flower crop HoeDirt from tracking");
 			}
 
 			// Check if flowers that would affect the honey produced by nearby bee houses have been harvested.
@@ -131,7 +136,7 @@ namespace HoneyHarvestSync
 				return;
 			}
 
-			DebugLog($"{nameof(OnOneSecondUpdateTicked)} - Found {flowerlessDirts.Count} harvested flowers.");
+			Log($"{nameof(OnOneSecondUpdateTicked)} - Found {flowerlessDirts.Count} harvested flowers.");
 			Monitor.VerboseLog($"{GetVerboseStart} {nameof(OnOneSecondUpdateTicked)} - Harvested flower details: {String.Join(" | ", flowerlessDirts.Select(x => $"{x.Location.Name} @ {x.Tile}"))}");
 
 			// Remove the flower tile(s) from being tracked
@@ -159,7 +164,7 @@ namespace HoneyHarvestSync
 					continue;
 				}
 
-				DebugLog($"{nameof(OnOneSecondUpdateTicked)} - Found {beeHousesToUpdate.Count} ready bee houses that need updating @ {flowerlessDirt.Location.Name} location.");
+				Log($"{nameof(OnOneSecondUpdateTicked)} - Found {beeHousesToUpdate.Count} ready bee houses that need updating @ {flowerlessDirt.Location.Name} location.");
 
 				UpdateLocationBeeHouses(flowerlessDirt.Location, beeHousesToUpdate);
 				
@@ -195,7 +200,7 @@ namespace HoneyHarvestSync
 
 			// Find all removed bee houses so we can remove them from our tracking dictionaries
 			IEnumerable<SObject> removedBeeHouses = e.Removed.Select(y => y.Value).Where(z => z.QualifiedItemId == beeHouseQualifiedItemID);
-			DebugLog($"{nameof(OnObjectListChanged)} - Found {removedBeeHouses.Count()} bee houses to attempt to remove from tracking");
+			Log($"{nameof(OnObjectListChanged)} - Found {removedBeeHouses.Count()} bee houses to attempt to remove from tracking");
 
 			if (beeHousesReady.ContainsKey(e.Location) && beeHousesReady[e.Location].Any(x => removedBeeHouses.Contains(x)))
 			{
@@ -253,7 +258,8 @@ namespace HoneyHarvestSync
 			{
 				Monitor.LogOnce($"{nameof(HoneyUpdater)} {nameof(RemoveLocationFromTracking)} Removed {dirtRemoved} `null` flower crop HoeDirt from tracking"
 					+ $" (future duplicates of this log message will only appear in the log file itself)", LogLevel.Info);
-				Monitor.Log($"{nameof(HoneyUpdater)} {nameof(RemoveLocationFromTracking)} Removed {dirtRemoved} `null` flower crop HoeDirt from tracking", LogLevel.Trace);
+
+				Log($"{nameof(HoneyUpdater)} {nameof(RemoveLocationFromTracking)} Removed {dirtRemoved} `null` flower crop HoeDirt from tracking");
 			}
 
 			nearbyFlowerDirts.RemoveWhere(x => x.Location == location);
@@ -389,7 +395,7 @@ namespace HoneyHarvestSync
 			// Remove any invalid bee houses from the given list
 			readyBeeHouses.RemoveAll(x => invalidBeeHouses.Contains(x));
 
-			DebugLog($"{nameof(UpdateLocationBeeHouses)} - Updated {readyBeeHouses.Count} ready bee houses "
+			Log($"{nameof(UpdateLocationBeeHouses)} - Updated {readyBeeHouses.Count} ready bee houses "
 				+ (newlyTrackedFlowerDirtCount > 0 ? $"and now tracking {newlyTrackedFlowerDirtCount} additional nearby flowers" : String.Empty)
 				+ $" @ {location.Name} location");
 
@@ -409,7 +415,7 @@ namespace HoneyHarvestSync
 
 			if (ready.Count > 0)
 			{
-				DebugLog($"{nameof(AddLocation)} - Found {ready.Count} ready bee houses @ {location.Name} location");
+				Log($"{nameof(AddLocation)} - Found {ready.Count} ready bee houses @ {location.Name} location");
 
 				beeHousesReady.Add(location, ready);
 				UpdateLocationBeeHouses(location, ready);
@@ -417,7 +423,7 @@ namespace HoneyHarvestSync
 
 			if (readyToday.Count > 0)
 			{
-				DebugLog($"{nameof(AddLocation)} - Found {readyToday.Count} bee houses that will be ready today @ {location.Name} location");
+				Log($"{nameof(AddLocation)} - Found {readyToday.Count} bee houses that will be ready today @ {location.Name} location");
 
 				beeHousesReadyToday.Add(location, readyToday);
 			}
