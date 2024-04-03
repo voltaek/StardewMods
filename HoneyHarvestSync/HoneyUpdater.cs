@@ -189,11 +189,8 @@ namespace HoneyHarvestSync
 		/// <param name="e">The event arguments.</param>
 		internal static void OnObjectListChanged(object sender, ObjectListChangedEventArgs e)
 		{
-			// Check the location and objects similar to how we location-filter elsewhere
-			if (!e.Removed.Any()
-				|| !e.Location.IsOutdoors
-				|| (!beeHousesReady.ContainsKey(e.Location) && !beeHousesReadyToday.ContainsKey(e.Location))
-				|| !e.Removed.Any(x => x.Value.QualifiedItemId == beeHouseQualifiedItemID))
+			// Check the removed objects for bee houses
+			if (!e.Removed.Any(x => x.Value.QualifiedItemId == beeHouseQualifiedItemID))
 			{
 				return;
 			}
@@ -366,7 +363,7 @@ namespace HoneyHarvestSync
 						newlyTrackedFlowerDirtCount += 1;
 
 						Monitor.VerboseLog($"{GetVerboseStart} Now tracking nearby grown flower {(String.IsNullOrEmpty(flowerName) ? String.Empty : $"({flowerName}) ")}"
-							+ $"via its dirt with tile {closeFlower.Dirt.Tile} affecting bee house @ {beeHouse.TileLocation} tile @ {location.Name} location");
+							+ $"via its dirt with tile {closeFlower.Dirt?.Tile.ToString() ?? "[dirt has `null` Tile]"} affecting bee house @ {beeHouse.TileLocation} tile @ {location.Name} location");
 					}
 				}
 
