@@ -10,18 +10,30 @@ namespace HoneyHarvestSync
 {
 	internal sealed class ModEntry : Mod
 	{
+		/// <summary>A reference to our mod's instantiation to use everywhere.</summary>
+		internal static ModEntry Context { get; private set; }
+
+		/// <summary>A reference to the Mod's logger so we can use it everywhere.</summary>
+		internal static IMonitor Logger { get; private set; }
+
 		/// <summary>The mod configuration from the player.</summary>
 		internal static ModConfig Config { get; private set; }
+
+		/// <summary>Logic and values to increase compatibility with other mods.</summary>
+		internal static ModCompat Compat { get; private set; }
 
 		/// <summary>The mod entry point, called after the mod is first loaded.</summary>
 		/// <param name="helper">Provides simplified APIs for writing mods.</param>
 		public override void Entry(IModHelper helper)
 		{
+			Context = this;
+			Logger = Monitor;
+
 			// Read user's config
 			Config = Helper.ReadConfig<ModConfig>();
 
-			// Hold onto the monitor so we can do logging
-			HoneyUpdater.Monitor = Monitor;
+			// Default compat values
+			Compat = new();
 
 			// Rig up event handler to set up Generic Mod Config Menu integration
 			Helper.Events.GameLoop.GameLaunched += OnGameLaunched;
@@ -39,7 +51,17 @@ namespace HoneyHarvestSync
 		/// <param name="e">The event arguments.</param>
 		private void OnGameLaunched(object sender, GameLaunchedEventArgs e)
 		{
-			// get Generic Mod Config Menu's API (if it's installed)
+			try
+			{
+				// Set up our mod compatibility stuff
+				Compat.Init();
+			}
+			catch (Exception ex)
+			{
+				Monitor.Log($"{nameof(OnGameLaunched)} failed to initialize values and APIs to handle compatibility with other mods. Exception:\n{ex}", LogLevel.Warn);
+			}
+
+			// Get Generic Mod Config Menu's API (if it's installed)
 			IGenericModConfigMenuApi configMenu = this.Helper.ModRegistry.GetApi<IGenericModConfigMenuApi>("spacechase0.GenericModConfigMenu");
 
 			if (configMenu is null)
