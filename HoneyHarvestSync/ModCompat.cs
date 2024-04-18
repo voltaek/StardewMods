@@ -1,4 +1,4 @@
-﻿using BetterBeehouses;
+﻿using HoneyHarvestSync.Integrations;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -7,14 +7,23 @@ using System.Threading.Tasks;
 
 namespace HoneyHarvestSync
 {
-	/// <summary>Contains logic and values to increase compatibility with other mods.</summary>
-	internal class ModCompat
+    /// <summary>Contains logic and values to increase compatibility with other mods.</summary>
+    internal class ModCompat
 	{
+		/// <summary>
+		/// Whether we have a reason to try to track non-HoeDirt "flower" locations for updates.
+		/// Basically whether or not there is a mod loaded that allows honey to be flavored by things that aren't crops-associated-to-dirt.
+		/// </summary>
+		public bool ShouldTrackNonDirtCrops
+		{
+			get { return IsCurrentBetterBeehousesModLoaded; }
+		}
+
 		private const bool canVanillaBeeHousesProduceIndoors = false;
 		/// <summary>Whether we should check indoors for bee houses.</summary>
 		public bool SyncIndoorBeeHouses
 		{
-			get { return BetterBeehousesModInfo != null ? canBetterBeehousesAllowIndoorBeehouses : canVanillaBeeHousesProduceIndoors; }
+			get { return IsCurrentBetterBeehousesModLoaded ? canBetterBeehousesAllowIndoorBeehouses : canVanillaBeeHousesProduceIndoors; }
 		}
 
 		private const int vanillaFlowerRange = 5;
@@ -24,15 +33,31 @@ namespace HoneyHarvestSync
 			get { return BetterBeehousesAPI != null ? BetterBeehousesAPI.GetSearchRadius() : vanillaFlowerRange; }
 		}
 
-		// Note - Since Better Beehouses patches the base game's `Utility.findCloseFlower()` method directly we shouldn't need to do anything different
-		// to determine the crop (if any) affecting a bee house. We'll just need to keep in mind that we might not get back a *flower* crop necessarily.
-		// Ref: https://github.com/tlitookilakin/BetterBeehouses
-		// Ref: https://www.nexusmods.com/stardewvalley/mods/10996
+		/* -- Better Beehouses compat notes --
+		 * It patches the base game's `Utility.findCloseFlower()` method directly, so we shouldn't need to do anything different to determine the crop/honey-affector (if any)
+		 * currently affecting a bee house's honey flavor. The only time that what we get back won't match what the farmer will harvest is if the mod's "random" feature
+		 * is enabled, but there's not much we can do about that.
+		 * We'll need to keep in mind that we might not get back a *flower* crop, necessarily, when dealing with the `Crop` object we get back when BB is enabled.
+		 * Also, unfortunately, since not all the "flowers"/honey-affectors the mod allows are crops, that means the `Crop` instance we get back can have
+		 * minimal properties set on it. We'll have to support specific tracking for most of the additional "honey flavor" source types.
+		 * Ref: https://github.com/tlitookilakin/BetterBeehouses
+		 * Ref: https://www.nexusmods.com/stardewvalley/mods/10996
+		 */
 		private const string betterBeehousesUniqueID = "tlitookilakin.BetterBeehouses";
 		private const string minimumBetterBeehousesVersion = "2.0.0";
+
+
+		// TODO - Need to increase this version number to the next BB release that includes the changes to Utilities.GetAllNearFlowers(),
+		// adds modData to things, and gives back real Crop instances where possible.
+
+
+
 		private const bool canBetterBeehousesAllowIndoorBeehouses = true;
+		public const string betterBeehousesModDataSourceTypeKey = "tlitookilakin.BetterBeehouses.SourceType";
+		public const string betterBeehousesModDataFromPotKey = "tlitookilakin.BetterBeehouses.FromPot";
 
 		private IModInfo BetterBeehousesModInfo { get; set; } = null;
+		private bool IsCurrentBetterBeehousesModLoaded { get; set; } = false;
 		private IBetterBeehousesAPI BetterBeehousesAPI { get; set; } = null;
 
 		/// <summary>
@@ -51,8 +76,10 @@ namespace HoneyHarvestSync
 				return;
 			}
 
+			IsCurrentBetterBeehousesModLoaded = !BetterBeehousesModInfo.Manifest.Version.IsOlderThan(minimumBetterBeehousesVersion);
+
 			// The API they had changed for SDV v1.6 / BB v2.0.0, so make sure its a current version.
-			if (BetterBeehousesModInfo.Manifest.Version.IsOlderThan(minimumBetterBeehousesVersion))
+			if (!IsCurrentBetterBeehousesModLoaded)
 			{
 				ModEntry.Logger.Log($"{nameof(ModCompat)}.{nameof(Init)} - Mod '{betterBeehousesUniqueID}' was found, "
 					+ $"but is older than our required minimum version of {minimumBetterBeehousesVersion} to interact with its API");

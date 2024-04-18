@@ -1,4 +1,5 @@
-﻿using GenericModConfigMenu;
+﻿using HoneyHarvestSync.API;
+using HoneyHarvestSync.Integrations;
 using StardewModdingAPI.Events;
 using System;
 using System.Collections.Generic;
@@ -8,7 +9,7 @@ using System.Threading.Tasks;
 
 namespace HoneyHarvestSync
 {
-	internal sealed class ModEntry : Mod
+    internal sealed class ModEntry : Mod
 	{
 		/// <summary>A reference to our mod's instantiation to use everywhere.</summary>
 		internal static ModEntry Context { get; private set; }
@@ -44,6 +45,14 @@ namespace HoneyHarvestSync
 			Helper.Events.GameLoop.OneSecondUpdateTicked += HoneyUpdater.OnOneSecondUpdateTicked;
 			Helper.Events.World.ObjectListChanged += HoneyUpdater.OnObjectListChanged;
 			Helper.Events.World.LocationListChanged += HoneyUpdater.OnLocationListChanged;
+		}
+
+		/// <summary>Provide API access to other mods.</summary>
+		/// <param name="mod">The mod accessing the provided API.</param>
+		/// <returns>An instance of `HoneyHarvestSyncAPI`, which conforms to `IHoneyHarvestSyncAPI`.</returns>
+		public override object GetApi(IModInfo mod)
+		{
+			return new HoneyHarvestSyncAPI(mod);
 		}
 
 		/// <summary>Event handler for when the game launches.</summary>
