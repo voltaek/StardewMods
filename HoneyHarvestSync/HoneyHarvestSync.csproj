@@ -5,4 +5,8 @@
     <UniqueId>voltaek.HoneyHarvestSync</UniqueId>
     <UpdateKeys>Nexus:20493</UpdateKeys>
   </PropertyGroup>
+  <!--
+    NOTE - If a Nuget package update tries to put a 'PackageReference' line for any of the ones in the 'Directory.Build.props' file,
+    then remove it and change the version number over in that file to match the new version number.
+  -->
 </Project>
