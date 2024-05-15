@@ -629,6 +629,9 @@ namespace HoneyHarvestSync
 					? flowerIngredient
 					: objectData.CreateFlavoredHoney(flowerIngredient);
 
+				// Add modData to this item to indicate that it's from this mod and it's just for display
+				beeHouse.heldObject.Value.modData[$"{ModEntry.Context.ModManifest.UniqueID}_BeeHouseReadyTempDisplayObject"] = "1";
+
 				Logger.VerboseLog($"{GetVerboseStart} Assigned {beeHouse.heldObject.Value.Name} to bee house @ {beeHouse.TileLocation} tile @ {location.Name} location");
 			}
 
