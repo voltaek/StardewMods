@@ -44,13 +44,7 @@ namespace HoneyHarvestSync
 		 * Ref: https://www.nexusmods.com/stardewvalley/mods/10996
 		 */
 		private const string betterBeehousesUniqueID = "tlitookilakin.BetterBeehouses";
-		private const string minimumBetterBeehousesVersion = "2.0.0";
-
-
-		// TODO - Need to increase this version number to the next BB release that includes the changes to Utilities.GetAllNearFlowers(),
-		// adds modData to things, and gives back real Crop instances where possible.
-
-
+		private const string minimumBetterBeehousesVersion = "2.1.0";
 
 		private const bool canBetterBeehousesAllowIndoorBeehouses = true;
 		public const string betterBeehousesModDataSourceTypeKey = "tlitookilakin.BetterBeehouses.SourceType";

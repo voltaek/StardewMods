@@ -22,6 +22,7 @@ namespace HoneyHarvestSync
 		
 		// For tracking modded honey-flavor sources
 		private static readonly Dictionary<string, HashSet<FruitTree>> nearbyFruitTrees = new();
+		private static readonly Dictionary<string, HashSet<Bush>> nearbyBushes = new();
 		private static readonly Dictionary<string, HashSet<IndoorPot>> nearbyForageIndoorPots = new();
 		private static readonly Dictionary<string, HashSet<SObject>> nearbyForageObjects = new();
 		private static readonly Dictionary<string, HashSet<GiantCrop>> nearbyGiantCrops = new();
@@ -175,6 +176,44 @@ namespace HoneyHarvestSync
 			if (fruitlessFruitTreesCount > 0)
 			{
 				Log($"{nameof(OnOneSecondUpdateTicked)} - Found {fruitlessFruitTreesCount} harvested fruit trees.");
+			}
+
+			int emptyBushesCount = 0;
+
+			foreach (KeyValuePair<string, HashSet<Bush>> nearbyBushEntry in nearbyBushes)
+			{
+				// Check if bushes that would affect the honey produced by nearby bee houses have been shaken of all their harvestables.
+				// In `Bush.shake`, an item debris (AKA a shaken-off item) is only allowed to be created when `this.tileSheetOffset.Value == 1` (AKA the bush is showing
+				// its "has fruit/flowers/etc to harvest" sprite), and `this.tileSheetOffset.Value` is then set to `0` upon being shaken/harvested.
+				// In the 'Custom Bush' framework mod (which is likely what is being used for any custom bushes), it appears the section of `Bush.shake` that checks
+				// and then assigns to `this.tileSheetOffset.Value` is not altered by any of its patches.
+				// Also, `__instance.tileSheetOffset.Value` is referenced in its `Bush_setUpSourceRect_postfix` patch, so it appears the value is still used in a "vanilla" way
+				// for determining whether the bush is harvestable or not.
+				// Ref: https://github.com/LeFauxMatt/StardewMods/blob/develop/CustomBush/Framework/Services/ModPatches.cs
+				HashSet<Bush> emptyBushes = nearbyBushEntry.Value.Where(x => x.tileSheetOffset.Value == 0).ToHashSet();
+
+				if (emptyBushes.Count > 0)
+				{
+					emptyBushesCount += emptyBushes.Count;
+
+					if (!locationTilesToUpdateAround.ContainsKey(nearbyBushEntry.Key))
+					{
+						locationTilesToUpdateAround.Add(nearbyBushEntry.Key, new());
+					}
+
+					// Hold onto where in the GameLocation we need to update near
+					locationTilesToUpdateAround[nearbyBushEntry.Key].AddRange(emptyBushes.Select(x => x.Tile));
+
+					// Remove the bush(es) from being tracked
+					nearbyBushEntry.Value.RemoveWhere(emptyBushes.Contains);
+
+					Logger.VerboseLog($"{GetVerboseStart} {nameof(OnOneSecondUpdateTicked)} - Harvested bushes:\n\t{nearbyBushEntry.Key} @ [{String.Join(", ", emptyBushes.Select(y => y.Tile))}]");
+				}
+			}
+
+			if (emptyBushesCount > 0)
+			{
+				Log($"{nameof(OnOneSecondUpdateTicked)} - Found {emptyBushesCount} harvested bushes.");
 			}
 
 			int foragelessIndoorPotsCount = 0;
@@ -407,6 +446,7 @@ namespace HoneyHarvestSync
 			}
 
 			nearbyFruitTrees.Remove(location.NameOrUniqueName);
+			nearbyBushes.Remove(location.NameOrUniqueName);
 			nearbyForageIndoorPots.Remove(location.NameOrUniqueName);
 			nearbyForageObjects.Remove(location.NameOrUniqueName);
 			nearbyGiantCrops.Remove(location.NameOrUniqueName);
@@ -452,6 +492,7 @@ namespace HoneyHarvestSync
 			if (!ModEntry.Compat.ShouldTrackNonDirtCrops)
 			{
 				nearbyFruitTrees.Clear();
+				nearbyBushes.Clear();
 				nearbyForageIndoorPots.Clear();
 				nearbyForageObjects.Clear();
 				nearbyGiantCrops.Clear();
@@ -731,6 +772,20 @@ namespace HoneyHarvestSync
 					}
 
 					if (nearbyFruitTrees[location.NameOrUniqueName].Add(tfFruitTree))
+					{
+						wasAdded = true;
+					}
+				}
+				else if (terrainFeature is Bush tfBush)
+				{
+					wasFound = true;
+
+					if (!nearbyBushes.ContainsKey(location.NameOrUniqueName))
+					{
+						nearbyBushes.Add(location.NameOrUniqueName, new());
+					}
+
+					if (nearbyBushes[location.NameOrUniqueName].Add(tfBush))
 					{
 						wasAdded = true;
 					}
