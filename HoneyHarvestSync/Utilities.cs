@@ -18,7 +18,7 @@ namespace HoneyHarvestSync
 		{
 			// The base game data has the flowers category and the "flower_item" tag on crop flowers and some forage flowers, but not all.
 			// Better Beehouses tags the four base game forage flowers all with "honey_source".
-			return item.Category == SObject.flowersCategory || item.HasContextTag("flower_item") || item.HasContextTag("honey_source");
+			return item.Category == SObject.flowersCategory || item.HasContextTag("flower_item") || item.HasContextTag("honey_source") || ModEntry.Compat.IsAnythingHoney;
 		}
 
 		/// <summary>Filter to test locations with to see if they can and do have relevant bee houses in them.</summary>

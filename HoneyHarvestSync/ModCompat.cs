@@ -33,6 +33,12 @@ namespace HoneyHarvestSync
 			get { return BetterBeehousesAPI != null ? BetterBeehousesAPI.GetSearchRadius() : vanillaFlowerRange; }
 		}
 
+		/// <summary>Whether a mod is allowing *any* item to qualify as a honey flavor source.</summary>
+		public bool IsAnythingHoney
+		{
+			get { return BetterBeehousesAPI != null && BetterBeehousesAPI.UsingAnythingHoney(); }
+		}
+
 		/* -- Better Beehouses compat notes --
 		 * It patches the base game's `Utility.findCloseFlower()` method directly, so we shouldn't need to do anything different to determine the crop/honey-affector (if any)
 		 * currently affecting a bee house's honey flavor. The only time that what we get back won't match what the farmer will harvest is if the mod's "random" feature
@@ -44,7 +50,7 @@ namespace HoneyHarvestSync
 		 * Ref: https://www.nexusmods.com/stardewvalley/mods/10996
 		 */
 		private const string betterBeehousesUniqueID = "tlitookilakin.BetterBeehouses";
-		private const string minimumBetterBeehousesVersion = "2.1.0";
+		private const string minimumBetterBeehousesVersion = "2.1.1";
 
 		private const bool canBetterBeehousesAllowIndoorBeehouses = true;
 		public const string betterBeehousesModDataSourceTypeKey = "tlitookilakin.BetterBeehouses.SourceType";

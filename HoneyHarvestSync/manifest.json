@@ -9,7 +9,7 @@
   "UniqueID": "voltaek.HoneyHarvestSync",
   "Name": "Honey Harvest Sync",
   "Author": "voltaek",
-  "Version": "3.0.0-alpha.1",
+  "Version": "3.0.0-alpha.2",
   "Description": "Ready-for-harvest bee houses show the flower that will flavor its honey or the artisan honey you'll receive.",
   "MinimumApiVersion": "4.0",
   "MinimumGameVersion": "1.6.8",
