@@ -45,10 +45,15 @@ namespace HoneyHarvestSync
 
 		// Shorthand property for creating a verbose log entry header.
 		// We want to use the verbose log method directly for best performance, both when actually using verbose and not.
-		private static string GetVerboseStart
+		private static string VerboseStart
 		{
 			// Show microsecond, so we can tell if something is slow.
 			get { return Logger.IsVerbose ? DateTime.Now.ToString("ffffff") : String.Empty; }
+		}
+
+		internal static string ModDataKey_BeeHouseReadyTempDisplayObject
+		{
+			get { return $"{ModEntry.Context.ModManifest.UniqueID}_BeeHouseReadyTempDisplayObject"; }
 		}
 
 		/// <summary>Event handler for after a new day starts.</summary>
@@ -56,12 +61,12 @@ namespace HoneyHarvestSync
 		/// <param name="e">The event arguments.</param>
 		internal static void OnDayStarted(object sender, DayStartedEventArgs e)
 		{
-			Logger.VerboseLog($"{GetVerboseStart} {nameof(OnDayStarted)} - Started");
+			Logger.VerboseLog($"{VerboseStart} {nameof(OnDayStarted)} - Started");
 
 			// Refresh everything - our tracked bee houses and our honey-flavor sources - for the new day
 			RefreshAll();			
 
-			Logger.VerboseLog($"{GetVerboseStart} {nameof(OnDayStarted)} - Ended");
+			Logger.VerboseLog($"{VerboseStart} {nameof(OnDayStarted)} - Ended");
 		}
 
 		/// <summary>Event handler for when the in-game clock changes.</summary>
@@ -135,7 +140,7 @@ namespace HoneyHarvestSync
 					// Remove the flower dirt(s) from being tracked
 					nearbyDirtEntry.Value.RemoveWhere(cropless.Contains);
 
-					Logger.VerboseLog($"{GetVerboseStart} {nameof(OnOneSecondUpdateTicked)} - "
+					Logger.VerboseLog($"{VerboseStart} {nameof(OnOneSecondUpdateTicked)} - "
 						+ $"Harvested flowers:\n\t{nearbyDirtEntry.Key} @ [{String.Join(", ", cropless.Select(y => y.Tile))}]");
 				}
 			}
@@ -171,7 +176,7 @@ namespace HoneyHarvestSync
 					// Remove the fruit tree(s) from being tracked
 					nearbyFruitTreeEntry.Value.RemoveWhere(fruitless.Contains);
 
-					Logger.VerboseLog($"{GetVerboseStart} {nameof(OnOneSecondUpdateTicked)} - "
+					Logger.VerboseLog($"{VerboseStart} {nameof(OnOneSecondUpdateTicked)} - "
 						+ $"Harvested fruit trees:\n\t{nearbyFruitTreeEntry.Key} @ [{String.Join(", ", fruitless.Select(y => y.Tile))}]");
 				}
 			}
@@ -271,7 +276,7 @@ namespace HoneyHarvestSync
 					// Remove the bush pot(s) from being tracked
 					nearbyBushPotEntry.Value.RemoveWhere(invalidBushPots.Contains);
 
-					Logger.VerboseLog($"{GetVerboseStart} {nameof(OnOneSecondUpdateTicked)} - "
+					Logger.VerboseLog($"{VerboseStart} {nameof(OnOneSecondUpdateTicked)} - "
 						+ $"Harvested or removed garden pot bushes:\n\t{nearbyBushPotEntry.Key} @ [{String.Join(", ", invalidBushPots.Select(y => y.TileLocation))}]");
 				}
 			}
@@ -303,7 +308,7 @@ namespace HoneyHarvestSync
 					// Remove the indoor pot(s) from being tracked
 					nearbyPotEntry.Value.RemoveWhere(forageless.Contains);
 
-					Logger.VerboseLog($"{GetVerboseStart} {nameof(OnOneSecondUpdateTicked)} - "
+					Logger.VerboseLog($"{VerboseStart} {nameof(OnOneSecondUpdateTicked)} - "
 						+ $"Harvested (of forage) indoor pots:\n\t{nearbyPotEntry.Key} @ [{String.Join(", ", forageless.Select(y => y.TileLocation))}]");
 				}
 			}
@@ -346,7 +351,7 @@ namespace HoneyHarvestSync
 					// Remove the giant crop(s) from being tracked
 					nearbyGiantCropEntry.Value.RemoveWhere(gone.Contains);
 
-					Logger.VerboseLog($"{GetVerboseStart} {nameof(OnOneSecondUpdateTicked)} - "
+					Logger.VerboseLog($"{VerboseStart} {nameof(OnOneSecondUpdateTicked)} - "
 						+ $"Harvested giant crops:\n\t{nearbyGiantCropEntry.Key} @ [{String.Join(", ", gone.Select(y => y.Tile))}]");
 				}
 			}
@@ -382,13 +387,13 @@ namespace HoneyHarvestSync
 				if (beeHousesReady.ContainsKey(locationName) && beeHousesReady[locationName].Any(removedBeeHouses.Contains))
 				{
 					beeHousesReady[locationName].RemoveWhere(removedBeeHouses.Contains);
-					Logger.VerboseLog($"{GetVerboseStart} {nameof(OnObjectListChanged)} - {e.Location} location has {beeHousesReady[locationName].Count} remaining tracked ready bee houses");
+					Logger.VerboseLog($"{VerboseStart} {nameof(OnObjectListChanged)} - {e.Location} location has {beeHousesReady[locationName].Count} remaining tracked ready bee houses");
 				}
 
 				if (beeHousesReadyToday.ContainsKey(locationName) && beeHousesReadyToday[locationName].Any(removedBeeHouses.Contains))
 				{
 					beeHousesReadyToday[locationName].RemoveWhere(removedBeeHouses.Contains);
-					Logger.VerboseLog($"{GetVerboseStart} {nameof(OnObjectListChanged)} - {e.Location} location has {beeHousesReadyToday[locationName].Count} remaining tracked ready-today bee houses");
+					Logger.VerboseLog($"{VerboseStart} {nameof(OnObjectListChanged)} - {e.Location} location has {beeHousesReadyToday[locationName].Count} remaining tracked ready-today bee houses");
 				}
 			}
 
@@ -416,7 +421,7 @@ namespace HoneyHarvestSync
 					if (removedLocationForagePots.Any())
 					{
 						Log($"{nameof(OnObjectListChanged)} - Found {removedLocationForagePots.Count()} removed forage-holding indoor pots at {locationName} to update bee houses near.");
-						Logger.VerboseLog($"{GetVerboseStart} [{String.Join(", ", removedLocationForagePots.Select(y => y.TileLocation))}]");
+						Logger.VerboseLog($"{VerboseStart} [{String.Join(", ", removedLocationForagePots.Select(y => y.TileLocation))}]");
 
 						// Hold onto where in the GameLocation we need to update near
 						updateNearTiles.AddRange(removedLocationForagePots.Select(x => x.TileLocation));
@@ -428,7 +433,7 @@ namespace HoneyHarvestSync
 					if (removedLocationBushPots.Any())
 					{
 						Log($"{nameof(OnObjectListChanged)} - Found {removedLocationBushPots.Count()} removed bush-hosting indoor pots at {locationName} to update bee houses near.");
-						Logger.VerboseLog($"{GetVerboseStart} [{String.Join(", ", removedLocationBushPots.Select(y => y.TileLocation))}]");
+						Logger.VerboseLog($"{VerboseStart} [{String.Join(", ", removedLocationBushPots.Select(y => y.TileLocation))}]");
 
 						// Hold onto where in the GameLocation we need to update near
 						updateNearTiles.AddRange(removedLocationBushPots.Select(x => x.TileLocation));
@@ -451,7 +456,7 @@ namespace HoneyHarvestSync
 					IEnumerable<SObject> removedLocationForage = nearbyForageObjects[locationName].Where(removedForageObjects.Contains);
 
 					Log($"{nameof(OnObjectListChanged)} - Found {removedLocationForage.Count()} harvested bare forage at {locationName} to update bee houses near.");
-					Logger.VerboseLog($"{GetVerboseStart} [{String.Join(", ", removedLocationForage.Select(y => y.TileLocation))}]");
+					Logger.VerboseLog($"{VerboseStart} [{String.Join(", ", removedLocationForage.Select(y => y.TileLocation))}]");
 
 					// Hold onto where in the GameLocation we need to update near
 					updateNearTiles.AddRange(removedLocationForage.Select(x => x.TileLocation));
@@ -545,7 +550,7 @@ namespace HoneyHarvestSync
 		/// </summary>
 		public static void RefreshBeeHouseHeldObjects()
 		{
-			Logger.VerboseLog($"{GetVerboseStart} {nameof(RefreshBeeHouseHeldObjects)} - Started");
+			Logger.VerboseLog($"{VerboseStart} {nameof(RefreshBeeHouseHeldObjects)} - Started");
 
 			foreach (KeyValuePair<string, HashSet<SObject>> kvp in beeHousesReady)
 			{
@@ -559,7 +564,7 @@ namespace HoneyHarvestSync
 				UpdateLocationBeeHouses(location, kvp.Value);
 			}
 
-			Logger.VerboseLog($"{GetVerboseStart} {nameof(RefreshBeeHouseHeldObjects)} - Ended");
+			Logger.VerboseLog($"{VerboseStart} {nameof(RefreshBeeHouseHeldObjects)} - Ended");
 		}
 
 		/// <summary>
@@ -652,7 +657,7 @@ namespace HoneyHarvestSync
 
 				UpdateLocationBeeHouses(updateLocation, beeHousesToUpdate);
 
-				Logger.VerboseLog($"{GetVerboseStart} {nameof(UpdateBeeHousesNearLocationTiles)} - Updated bee house details: {String.Join(" | ", beeHousesToUpdate.Select(x => x.TileLocation))}");
+				Logger.VerboseLog($"{VerboseStart} {nameof(UpdateBeeHousesNearLocationTiles)} - Updated bee house details: {String.Join(" | ", beeHousesToUpdate.Select(x => x.TileLocation))}");
 			}
 		}
 
@@ -664,7 +669,7 @@ namespace HoneyHarvestSync
 		/// <param name="readyBeeHouses">The bee houses which are ready to be harvested which we should update the honey of.</param>
 		private static void UpdateLocationBeeHouses(GameLocation location, HashSet<SObject> readyBeeHouses)
 		{
-			Logger.VerboseLog($"{GetVerboseStart} {nameof(UpdateLocationBeeHouses)} - Started");
+			Logger.VerboseLog($"{VerboseStart} {nameof(UpdateLocationBeeHouses)} - Started");
 
 			ObjectDataDefinition objectData = ItemRegistry.GetObjectTypeDefinition();
 			int flowerRange = ModEntry.Compat.FlowerRange;
@@ -705,7 +710,7 @@ namespace HoneyHarvestSync
 
 					if (flowerIngredientID == null)
 					{
-						Logger.Log($"Failed to get the qualified item ID of a nearby flower from the flower's `indexOfHarvest.Value` value of '{closeFlower.indexOfHarvest.Value}'.", LogLevel.Warn);
+						Logger.Log($"Failed to get the qualified item ID of a nearby flower from the flower's `indexOfHarvest.Value` value of '{closeFlower.indexOfHarvest.Value}'.", LogLevel.Info);
 					}
 					else
 					{
@@ -757,9 +762,9 @@ namespace HoneyHarvestSync
 					: objectData.CreateFlavoredHoney(flowerIngredient);
 
 				// Add modData to this item to indicate that it's from this mod and it's just for display
-				beeHouse.heldObject.Value.modData[$"{ModEntry.Context.ModManifest.UniqueID}_BeeHouseReadyTempDisplayObject"] = "1";
+				beeHouse.heldObject.Value.modData[ModDataKey_BeeHouseReadyTempDisplayObject] = "1";
 
-				Logger.VerboseLog($"{GetVerboseStart} Assigned {beeHouse.heldObject.Value.Name} to bee house @ {beeHouse.TileLocation} tile @ {location.Name} location");
+				Logger.VerboseLog($"{VerboseStart} Assigned {beeHouse.heldObject.Value.Name} to bee house @ {beeHouse.TileLocation} tile @ {location.Name} location");
 			}
 
 			// Remove any invalid bee houses from the given list
@@ -769,7 +774,7 @@ namespace HoneyHarvestSync
 				+ (newlyTrackedHoneyFlavorSourceCount > 0 ? $"and now tracking {newlyTrackedHoneyFlavorSourceCount} additional nearby {(ModEntry.Compat.ShouldTrackNonDirtCrops ? "flowers" : "honey flavor sources")}" : String.Empty)
 				+ $" @ {location.Name} location");
 
-			Logger.VerboseLog($"{GetVerboseStart} {nameof(UpdateLocationBeeHouses)} - Ended");
+			Logger.VerboseLog($"{VerboseStart} {nameof(UpdateLocationBeeHouses)} - Ended");
 		}
 
 		/// <summary>
@@ -796,7 +801,7 @@ namespace HoneyHarvestSync
 				// Track the tile location of the `HoeDirt` that holds the flower's `Crop` object so we can watch for it being harvested later.
 				if (nearbyFlowerDirt[location.NameOrUniqueName].Add(crop.Dirt))
 				{
-					Logger.VerboseLog($"{GetVerboseStart} Now tracking nearby grown flower '{honeyFlavorSourceHarvestName}' "
+					Logger.VerboseLog($"{VerboseStart} Now tracking nearby grown flower '{honeyFlavorSourceHarvestName}' "
 						+ $"via its Dirt with tile {crop.Dirt?.Tile.ToString() ?? "[Dirt has `null` Tile]"}. (Bee House Tile {beeHouse.TileLocation} and {location.NameOrUniqueName} location)");
 
 					return true;
@@ -974,7 +979,7 @@ namespace HoneyHarvestSync
 
 			if (wasAdded)
 			{
-				Logger.VerboseLog($"{GetVerboseStart} Now tracking nearby honey-flavor source '{honeyFlavorSourceHarvestName}' "
+				Logger.VerboseLog($"{VerboseStart} Now tracking nearby honey-flavor source '{honeyFlavorSourceHarvestName}' "
 					+ $"{(hasSourceType_BB ? $"(BB | source type: {sourceType_BB} | harvest ID: {crop.indexOfHarvest.Value}) " : String.Empty)}"
 					+ $"{(isInPot_BB ? $"(BB in-pot item) " : String.Empty)}at {searchPosition} tile position. "
 					+ $"(Bee House Tile {beeHouse.TileLocation} and {location.Name} location)");
