@@ -115,6 +115,16 @@ namespace HoneyHarvestSync
 		/// <param name="e">The event arguments.</param>
 		internal static void OnOneSecondUpdateTicked(object sender, OneSecondUpdateTickedEventArgs e)
 		{
+			// Every X seconds, refresh everything if we found that another mod has changed settings we care about.
+			if (e.IsMultipleOf(5 * 60) && ModEntry.Compat.DidCompatModConfigChange())
+			{
+				Log($"{nameof(OnOneSecondUpdateTicked)} - Doing a full refresh because another mod has updated config values we care about.");
+
+				RefreshAll();
+
+				return;
+			}
+
 			// Collect all tiles to update around for each location
 			Dictionary<string, HashSet<Vector2>> locationTilesToUpdateAround = new();
 						

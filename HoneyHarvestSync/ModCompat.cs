@@ -98,6 +98,45 @@ namespace HoneyHarvestSync
 			}
 			
 			ModEntry.Logger.Log($"{nameof(ModCompat)}.{nameof(Init)} - Got {nameof(IBetterBeehousesAPI)}");
+
+			previousFlowerRange = FlowerRange;
+			previousIsAnythingHoney = IsAnythingHoney;
+		}
+
+		// These are used to track other mods updating config values we care about in `DidCompatModConfigChange()`
+		private int previousFlowerRange;
+		private bool previousIsAnythingHoney;
+
+		/// <summary>
+		/// Every time this is run it will check if a mod we care about for compatibility reasons has changed any settings we care about.
+		/// </summary>
+		/// <returns>Whether or not another mod we attempt compatibility with has updated config values we care about.</returns>
+		public bool DidCompatModConfigChange()
+		{
+			if (!ShouldTrackNonDirtCrops)
+			{
+				return false;
+			}
+
+			bool didChange = false;
+
+			int flowerRange = FlowerRange;
+
+			if (previousFlowerRange != flowerRange)
+			{
+				previousFlowerRange = flowerRange;
+				didChange = true;
+			}
+
+			bool isAnythingHoney = IsAnythingHoney;
+
+			if (previousIsAnythingHoney != isAnythingHoney)
+			{
+				previousIsAnythingHoney = isAnythingHoney;
+				didChange = true;
+			}
+
+			return didChange;
 		}
 	}
 }
