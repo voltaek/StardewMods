@@ -579,7 +579,7 @@ namespace HoneyHarvestSync
 			beeHousesReadyToday.Clear();
 			nearbyFlowerDirt.Clear();
 
-			if (!ModEntry.Compat.ShouldTrackNonDirtCrops)
+			if (ModEntry.Compat.ShouldTrackNonDirtCrops)
 			{
 				nearbyFruitTrees.Clear();
 				nearbyBushes.Clear();
@@ -703,14 +703,14 @@ namespace HoneyHarvestSync
 				SObject flowerIngredient = null;
 				string flowerHarvestName = String.Empty;
 
-				// If we found a qualifying flower crop, then get its harvested object form.
-				if (closeFlower != null)
+				// If we found a qualifying flower crop with an assigned harvest item, then get its harvested object form.
+				if (closeFlower?.indexOfHarvest?.Value != null)
 				{
 					string flowerIngredientID = ItemRegistry.QualifyItemId(closeFlower.indexOfHarvest.Value);
 
 					if (flowerIngredientID == null)
 					{
-						Logger.Log($"Failed to get the qualified item ID of a nearby flower from the flower's `indexOfHarvest.Value` value of '{closeFlower.indexOfHarvest.Value}'.", LogLevel.Info);
+						Logger.Log($"Failed to get the qualified item ID of a nearby flower from the flower's `indexOfHarvest.Value` value of '{closeFlower.indexOfHarvest.Value}'.", LogLevel.Warn);
 					}
 					else
 					{
@@ -740,6 +740,11 @@ namespace HoneyHarvestSync
 					}
 
 					newlyTrackedHoneyFlavorSourceCount += TrackHoneyFlavorSource(closeFlower, location, beeHouse, flowerHarvestName) ? 1 : 0;
+				}
+				else if (closeFlower != null && closeFlower.indexOfHarvest?.Value == null)
+				{
+					Logger.Log($"The nearby {(ModEntry.Compat.ShouldTrackNonDirtCrops ? "honey flavor source" : "flower")} "
+						+ $"has no harvest item (`indexOfHarvest.Value`) value assigned, which is probably incorrect.", LogLevel.Info);
 				}
 
 				/*
@@ -771,7 +776,7 @@ namespace HoneyHarvestSync
 			readyBeeHouses.RemoveWhere(invalidBeeHouses.Contains);
 
 			Log($"{nameof(UpdateLocationBeeHouses)} - Updated {readyBeeHouses.Count} ready bee houses "
-				+ (newlyTrackedHoneyFlavorSourceCount > 0 ? $"and now tracking {newlyTrackedHoneyFlavorSourceCount} additional nearby {(ModEntry.Compat.ShouldTrackNonDirtCrops ? "flowers" : "honey flavor sources")}" : String.Empty)
+				+ (newlyTrackedHoneyFlavorSourceCount > 0 ? $"and now tracking {newlyTrackedHoneyFlavorSourceCount} additional nearby {(ModEntry.Compat.ShouldTrackNonDirtCrops ? "honey flavor sources" : "flowers")}" : String.Empty)
 				+ $" @ {location.Name} location");
 
 			Logger.VerboseLog($"{VerboseStart} {nameof(UpdateLocationBeeHouses)} - Ended");
