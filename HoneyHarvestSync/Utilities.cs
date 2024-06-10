@@ -1,6 +1,7 @@
 ﻿using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -27,6 +28,25 @@ namespace HoneyHarvestSync
 		internal static bool IsLocationWithBeeHouses(GameLocation location)
 		{
 			return (location.IsOutdoors || ModEntry.Compat.SyncIndoorBeeHouses) && location.Objects.Values.Any(x => x.QualifiedItemId == Constants.beeHouseQualifiedItemID);
+		}
+
+		/// <summary>
+		/// Output text directly to the console - only for debug builds - using optional specific text and background colors.
+		/// </summary>
+		/// <param name="message">The message to output to the console. Gets no prefixing like SMAPI might do.</param>
+		/// <param name="textColor">Optional. The text color to use for the message. Defaults to the 'DarkGray' that SMAPI uses for DEBUG and TRACE logs.</param>
+		/// <param name="backColor">Optional. The background color to use for the message. If the default 'Black' is left or passed, will skip setting the background color.</param>
+		[Conditional("DEBUG")]
+		internal static void DebugConsoleLog(string message, ConsoleColor textColor = ConsoleColor.DarkGray, ConsoleColor backColor = ConsoleColor.Black)
+		{
+			if (backColor != ConsoleColor.Black)
+			{
+				Console.BackgroundColor = backColor;
+			}
+
+			Console.ForegroundColor = textColor;
+			Console.WriteLine(message);
+			Console.ResetColor();
 		}
 
 		/// <summary>Checks if a given location is within the effective range of a flower.</summary>
