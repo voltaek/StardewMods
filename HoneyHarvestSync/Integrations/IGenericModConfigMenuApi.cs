@@ -1,12 +1,12 @@
 using System;
 using StardewModdingAPI;
 
-namespace GenericModConfigMenu
+namespace HoneyHarvestSync.Integrations
 {
-	/// <remarks>GenericModConfigMenu v1.11.2 - Only kept the functions we reference</remarks>
-	/// <see href="https://github.com/spacechase0/StardewValleyMods/blob/develop/GenericModConfigMenu/IGenericModConfigMenuApi.cs"/>
-	/// <summary>The API which lets other mods add a config UI through Generic Mod Config Menu.</summary>
-	public interface IGenericModConfigMenuApi
+    /// <remarks>GenericModConfigMenu v1.12.0 - Only kept the functions we reference</remarks>
+    /// <see href="https://github.com/spacechase0/StardewValleyMods/blob/develop/GenericModConfigMenu/IGenericModConfigMenuApi.cs"/>
+    /// <summary>The API which lets other mods add a config UI through Generic Mod Config Menu.</summary>
+    public interface IGenericModConfigMenuApi
     {
         /// <summary>Register a mod whose config can be edited through the UI.</summary>
         /// <param name="mod">The mod's manifest.</param>
