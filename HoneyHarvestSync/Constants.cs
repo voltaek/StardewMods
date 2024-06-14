@@ -22,7 +22,10 @@ namespace HoneyHarvestSync
 
 		/// <summary>The globally unique identifier for Garden Pot AKA `IndoorPot`.</summary>
 		public const string gardenPotQualifiedItemID = "(BC)62";
-				
+
+		/// <summary>The console command for refreshing things.</summary>
+		public const string consoleCommandRefresh = "hhs_refresh";
+
 		// For debug builds, show log messages as DEBUG so they show in the SMAPI console.
 		#if DEBUG
 		public const LogLevel buildLogLevel = LogLevel.Debug;

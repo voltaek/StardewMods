@@ -45,6 +45,47 @@ namespace HoneyHarvestSync
 			Helper.Events.GameLoop.OneSecondUpdateTicked += HoneyUpdater.OnOneSecondUpdateTicked;
 			Helper.Events.World.ObjectListChanged += HoneyUpdater.OnObjectListChanged;
 			Helper.Events.World.LocationListChanged += HoneyUpdater.OnLocationListChanged;
+
+			// Rig up our console command-handling method for a refresh command
+			Helper.ConsoleCommands.Add(
+				Constants.consoleCommandRefresh,
+				$"Refreshes {this.ModManifest.Name}'s tracked bee houses or everything that it tracks.\n\n"
+					+ $"Usage: {Constants.consoleCommandRefresh} [refresh_type]\n"
+					+ $"- refresh_type: 'ready' Refreshes all known ready-for-harvest bee houses (default).\n"
+					+ $"                'all'   Refreshes everything from scratch.",
+				DoConsoleCommand);
+		}
+
+		/// <summary>Run one of our custom console commands.</summary>
+		/// <param name="command">The name of the command invoked.</param>
+		/// <param name="args">The arguments received by the command. Each word after the command name is a separate argument.</param>
+		private void DoConsoleCommand(string command, string[] args)
+		{
+			if (command.Trim().ToLower() == Constants.consoleCommandRefresh)
+			{
+				// If they pass no param (AKA this is the default) or 'ready' as the param then refresh known ready-to-harvest bee houses.
+				if (args == null || args.Length == 0 || args[0].Trim().ToLower() == "ready")
+				{
+					Logger.Log($"Console command '{command}' invoking {nameof(HoneyUpdater.RefreshBeeHouseHeldObjects)}", Constants.buildLogLevel);
+
+					HoneyUpdater.RefreshBeeHouseHeldObjects();
+				}
+				// If they pass 'all' as the param, then refresh everything.
+                else if (args[0].Trim().ToLower() == "all")
+                {
+					Logger.Log($"Console command '{command}' invoking {nameof(HoneyUpdater.RefreshAll)}", Constants.buildLogLevel);
+
+					HoneyUpdater.RefreshAll();
+                }
+				else
+				{
+					Logger.Log($"Unknown parameter option for console command '{command}'", LogLevel.Warn);
+				}
+            }
+			else
+			{
+				Logger.Log($"Unknown console command '{command}'", LogLevel.Warn);
+			}
 		}
 
 		/// <summary>Provide API access to other mods.</summary>
