@@ -55,36 +55,7 @@ namespace HoneyHarvestSync
 		/// <returns>True if the location is within range, False if not.</returns>
 		internal static bool IsWithinFlowerRange(Vector2 checkLocation, Vector2 flowerLocation)
 		{
-			int flowerRange = ModEntry.Compat.FlowerRange;
-
-			// Start with a quick check to see if it's in a square of the radius size since that's much faster to check
-			if (!(checkLocation.X <= flowerLocation.X + flowerRange && checkLocation.X >= Math.Max(flowerLocation.X - flowerRange, 0)
-				&& checkLocation.Y <= flowerLocation.Y + flowerRange && checkLocation.Y >= Math.Max(flowerLocation.Y - flowerRange, 0)))
-			{
-				return false;
-			}
-
-			int yCheck = 0;
-			int xCheck = flowerRange;
-
-			// This does kind of "middle out" checking of the diamond shape so we hit the horizontal rows with the most tiles first.
-			// We start with the full-width middle row, then check the row above AND below that one at once, but with one less tile on each horizontal side,
-			// then continue checking above and below those ones, each time checking less horizontal tiles, until we finish by checking the topmost tile and bottommost tile.
-			// In testing, doing it this way takes on average about half the checks versus scanning from topmost tile down each row until bottommost tile.
-			while (yCheck <= flowerRange)
-			{
-				if ((checkLocation.Y == flowerLocation.Y + yCheck || (yCheck != 0 && checkLocation.Y == Math.Max(flowerLocation.Y - yCheck, 0)))
-					&& checkLocation.X >= Math.Max(flowerLocation.X - xCheck, 0)
-					&& checkLocation.X <= flowerLocation.X + xCheck)
-				{
-					return true;
-				}
-
-				yCheck += 1;
-				xCheck -= 1;
-			}
-
-			return false;
+			return Vector2.Distance(checkLocation, flowerLocation) <= ModEntry.Compat.FlowerRange;
 		}
 
 		internal static void TestIsWithinFlowerRange(bool shouldTestDebugLocations = true, bool shouldTestRandomLocations = false)
