@@ -40,9 +40,12 @@ namespace HoneyHarvestSync
 			Helper.Events.GameLoop.GameLaunched += OnGameLaunched;
 
 			// Rig up the event handlers we need to do proper tracking of bee houses and flowers
+			Helper.Events.GameLoop.ReturnedToTitle += HoneyUpdater.OnReturnedToTitle;
 			Helper.Events.GameLoop.DayStarted += HoneyUpdater.OnDayStarted;
+			Helper.Events.GameLoop.DayEnding += HoneyUpdater.OnDayEnding;
 			Helper.Events.GameLoop.TimeChanged += HoneyUpdater.OnTimeChanged;
 			Helper.Events.GameLoop.OneSecondUpdateTicked += HoneyUpdater.OnOneSecondUpdateTicked;
+			Helper.Events.GameLoop.UpdateTicked += HoneyUpdater.OnUpdateTicked;
 			Helper.Events.World.ObjectListChanged += HoneyUpdater.OnObjectListChanged;
 			Helper.Events.World.LocationListChanged += HoneyUpdater.OnLocationListChanged;
 

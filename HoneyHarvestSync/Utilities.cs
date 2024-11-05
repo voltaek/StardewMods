@@ -1,4 +1,5 @@
 ﻿using Microsoft.Xna.Framework;
+using StardewValley.GameData.Machines;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -10,6 +11,63 @@ namespace HoneyHarvestSync
 {
 	internal static class Utilities
 	{
+		/// <summary>
+		/// Returns a string the uniquely identifies the current in-game day.
+		/// </summary>
+		internal static string UniqueDay
+		{
+			get { return $"Year_{Game1.year}-{Game1.season}-Day_{Game1.dayOfMonth}"; }
+		}
+
+		/// <summary>
+		/// Shorthand property for creating a verbose log entry header.
+		/// We want to use the verbose log method directly for best performance, both when actually using verbose and not.
+		/// </summary>
+		internal static string VerboseStart
+		{
+			// Show microsecond, so we can tell if something is slow.
+			get { return ModEntry.Logger.IsVerbose ? DateTime.Now.ToString("ffffff") : String.Empty; }
+		}
+
+		/// <summary>
+		/// Shorthand method for creating a standard log entry, depending on debug build or not.
+		/// </summary>
+		/// <param name="message">The message to log.</param>
+		internal static void Log(string message) => ModEntry.Logger.Log(message, Constants.buildLogLevel);
+
+		internal static int MinutesUntilEndOfDay
+		{
+			get { return Constants.maxMinutesAwake - Utility.CalculateMinutesBetweenTimes(Constants.startOfDayTime, Game1.timeOfDay); }
+		}
+
+		internal static MachineData BeeHouseMachineData
+		{
+			get { return DataLoader.Machines(Game1.content).GetValueOrDefault(Constants.beeHouseQualifiedItemID); }
+		}
+
+		private static bool areAllBeeHouseOutputRulesByDay = false;
+		private static string beeHouseDailyRefreshCheckTimestamp = String.Empty;
+
+		/// <summary>Whether or not bee houses only refresh overnight.</summary>
+		internal static bool DoBeeHousesOnlyRefreshDaily
+		{
+			get
+			{
+				if (beeHouseDailyRefreshCheckTimestamp == UniqueDay)
+				{
+					return areAllBeeHouseOutputRulesByDay;
+				}
+
+				// If days are defined in all the rules (AKA not -1), days are used, regardless of if minutes are defined or not.
+				areAllBeeHouseOutputRulesByDay = BeeHouseMachineData?.OutputRules?.All(rule => rule.DaysUntilReady >= 0) ?? false;
+				
+				// Note when we last checked so we check fresh each day, just in case something changes.
+				beeHouseDailyRefreshCheckTimestamp = UniqueDay;
+
+				return areAllBeeHouseOutputRulesByDay;
+			}
+		}
+
 		/// <summary>
 		/// Whether the given item has characteristics that identify it as a potential honey-flavor source.
 		/// </summary>
@@ -28,6 +86,26 @@ namespace HoneyHarvestSync
 		internal static bool IsLocationWithBeeHouses(GameLocation location)
 		{
 			return (location.IsOutdoors || ModEntry.Compat.SyncIndoorBeeHouses) && location.Objects.Values.Any(x => x.QualifiedItemId == Constants.beeHouseQualifiedItemID);
+		}
+
+		/// <summary>
+		/// This uses a base game method that handles all of our needs (caching + inside locs), plus will do a `LogOnce` for a location if it can't be found.
+		/// We can't really trust a Location property on - for example - a TerrainFeature or ResourceClump since it gets set to `null` when they're removed by the game
+		/// from its location's list of them, so we fetch location instances ourselves instead of trying to use an instance's location property.
+		/// </summary>
+		/// <param name="locationName">The game's name for a location</param>
+		/// <returns>The `GameLocation` object if found; `null` if not.</returns>
+		internal static GameLocation FetchLocationByName(string locationName)
+		{
+			// This base game method will get from cache where possible and handles locations which are buildings.
+			GameLocation location = Game1.getLocationFromName(locationName);
+
+			if (location == null)
+			{
+				ModEntry.Logger.LogOnce($"Failed to get GameLocation with location name '{locationName}'. Will be unable to refresh bee houses in this location.", LogLevel.Warn);
+			}
+
+			return location;
 		}
 
 		/// <summary>
