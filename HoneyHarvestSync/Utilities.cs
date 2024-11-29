@@ -48,7 +48,7 @@ namespace HoneyHarvestSync
 		private static bool areAllBeeHouseOutputRulesByDay = false;
 		private static string beeHouseDailyRefreshCheckTimestamp = String.Empty;
 
-		/// <summary>Whether or not bee houses only refresh overnight.</summary>
+		/// <summary>Whether or not we can be sure that bee houses only refresh overnight.</summary>
 		internal static bool DoBeeHousesOnlyRefreshDaily
 		{
 			get
@@ -58,8 +58,11 @@ namespace HoneyHarvestSync
 					return areAllBeeHouseOutputRulesByDay;
 				}
 
-				// If days are defined in all the rules (AKA not -1), days are used, regardless of if minutes are defined or not.
-				areAllBeeHouseOutputRulesByDay = BeeHouseMachineData?.OutputRules?.All(rule => rule.DaysUntilReady >= 0) ?? false;
+				// We have to check two things to determine if bee houses only refresh in full day increments AKA only at 6am each morning:
+				// * If all the rules have days defined (AKA are not -1), then days are used, regardless of if minutes are defined or not.
+				// * If any ready-time modifiers are defined, then we can't assume anything about when bee houses will be ready.
+				areAllBeeHouseOutputRulesByDay = (BeeHouseMachineData?.OutputRules?.All(rule => rule.DaysUntilReady >= 0) ?? false)
+					&& ((BeeHouseMachineData?.ReadyTimeModifiers?.Count ?? 0) == 0);
 				
 				// Note when we last checked so we check fresh each day, just in case something changes.
 				beeHouseDailyRefreshCheckTimestamp = UniqueDay;
