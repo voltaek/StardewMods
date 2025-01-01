@@ -13,8 +13,8 @@
     
     <!-- ModManifestBuilder options, ref: https://github.com/KhloeLeclair/Stardew-ModManifestBuilder -->
     <ManifestSchema>false</ManifestSchema>
-    <MinimumApiVersion_Behavior>Update</MinimumApiVersion_Behavior>
     <Version_AppendConfiguration>false</Version_AppendConfiguration>
+    <MinimumApiVersion_Behavior>UpdateFull</MinimumApiVersion_Behavior>
     <MinimumGameVersion_Behavior>UpdateFull</MinimumGameVersion_Behavior>
     <ManifestWarningsAsErrors Condition="$(Configuration) == 'Release'">true</ManifestWarningsAsErrors>
   </PropertyGroup>
@@ -23,8 +23,8 @@
     <Exec Command="xcopy /y &quot;$(ProjectDir)..\LICENSE&quot; &quot;$(OutDir)&quot;" />
   </Target>
   <ItemGroup>
-    <PackageReference Include="Pathoschild.Stardew.ModBuildConfig" Version="4.3.0"/>
-    <PackageReference Include="Leclair.Stardew.ModManifestBuilder" Version="2.3.1"/>
+    <PackageReference Include="Pathoschild.Stardew.ModBuildConfig" Version="4.3.2"/>
+    <PackageReference Include="Leclair.Stardew.ModManifestBuilder" Version="2.4.1"/>
   </ItemGroup>
   <ItemGroup>
     <Using Include="StardewValley"/>

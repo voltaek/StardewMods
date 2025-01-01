@@ -34,7 +34,7 @@ namespace HoneyHarvestPredictor
 		public const string HoeDirtNetCropNetFieldName = $"{nameof(TerrainFeature)} ({nameof(HoeDirt)}): {HoeDirtNetCropPropertyName}";
 
 		/// <summary>The console command for refreshing things.</summary>
-		public const string consoleCommandRefresh = "hhs_refresh";
+		public const string consoleCommandRefresh = "hhp_refresh";
 
 		// For debug builds, show log messages as DEBUG so they show in the SMAPI console.
 		#if DEBUG

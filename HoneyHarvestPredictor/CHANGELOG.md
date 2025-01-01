@@ -6,22 +6,27 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [4.0.0] - 2025-01-01
+#### Compatible with Stardew Valley v1.6.15 and SMAPI v4.1.10.
+
+**When upgrading, be sure to delete any previous 'Honey Harvest Sync' mod folder and files.**
 
 ### Changed
 - Changed name of mod from 'Honey Harvest Sync' to 'Honey Harvest Predictor'.
-	- API was also renamed, hence the bump to v4.0.
+	- API was also renamed, hence the full version bump to v4.0.
+	- Console command `hhs_refresh` renamed to `hhp_refresh`.
 - Full rewrite of honey-flavor-source tracking to use event listeners instead of polling.
-- Replace range check with faster built-in function.
+- Replace custom bee house range check with faster built-in function.
 
 ### Fixed
+- Refresh bee houses near all parts of a harvested giant crop, not just its top left tile.
 - Track bushes' harvested state rather than bloom state.
-- Refresh bee houses near any part of a harvested giant crop, not just its top left tile.
-- Clean up when returning to the title screen.
+- Clean up tracking when returning to the title screen.
 
 ### Added
+- Handle when tracked things are destroyed by bombs, especially garden pots.
 - Only check bee houses becoming ready throughout the day if they're not configured refresh daily (daily is the default).
 
-- 
+
 ## [3.0.0] - 2024-06-14
 
 ### Added
