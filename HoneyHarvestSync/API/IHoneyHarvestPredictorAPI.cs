@@ -4,9 +4,9 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace HoneyHarvestSync.API
+namespace HoneyHarvestPredictor.API
 {
-	public interface IHoneyHarvestSyncAPI
+	public interface IHoneyHarvestPredictorAPI
 	{
 		/// <summary>
 		/// Returns the config value chosen for the icon type to show above ready-for-harvest bee houses.

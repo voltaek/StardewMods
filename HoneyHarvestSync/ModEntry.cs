@@ -1,5 +1,5 @@
-﻿using HoneyHarvestSync.API;
-using HoneyHarvestSync.Integrations;
+﻿using HoneyHarvestPredictor.API;
+using HoneyHarvestPredictor.Integrations;
 using StardewModdingAPI.Events;
 using System;
 using System.Collections.Generic;
@@ -7,7 +7,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace HoneyHarvestSync
+namespace HoneyHarvestPredictor
 {
     internal sealed class ModEntry : Mod
 	{
@@ -93,10 +93,10 @@ namespace HoneyHarvestSync
 
 		/// <summary>Provide API access to other mods.</summary>
 		/// <param name="mod">The mod accessing the provided API.</param>
-		/// <returns>An instance of `HoneyHarvestSyncAPI`, which conforms to `IHoneyHarvestSyncAPI`.</returns>
+		/// <returns>An instance of `HoneyHarvestPredictorAPI`, which conforms to `IHoneyHarvestPredictorAPI`.</returns>
 		public override object GetApi(IModInfo mod)
 		{
-			return new HoneyHarvestSyncAPI(mod);
+			return new HoneyHarvestPredictorAPI(mod);
 		}
 
 		/// <summary>Event handler for when the game launches.</summary>

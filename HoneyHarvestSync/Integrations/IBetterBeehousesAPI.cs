@@ -3,7 +3,7 @@ using StardewValley;
 using System;
 using System.Collections.Generic;
 
-namespace HoneyHarvestSync.Integrations
+namespace HoneyHarvestPredictor.Integrations
 {
 	/// <summary>Better Beehouses v2.1.1 API</summary>
 	public interface IBetterBeehousesAPI

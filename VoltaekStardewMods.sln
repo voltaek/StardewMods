@@ -3,7 +3,7 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.8.34511.84
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "HoneyHarvestSync", "HoneyHarvestSync\HoneyHarvestSync.csproj", "{146977E3-22E0-47BB-A4A6-27F81F459488}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "HoneyHarvestPredictor", "HoneyHarvestSync\HoneyHarvestPredictor.csproj", "{146977E3-22E0-47BB-A4A6-27F81F459488}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

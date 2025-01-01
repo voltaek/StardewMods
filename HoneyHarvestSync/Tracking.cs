@@ -9,7 +9,7 @@ using System.Text;
 using System.Threading.Tasks;
 using StardewValley.Extensions;
 
-namespace HoneyHarvestSync
+namespace HoneyHarvestPredictor
 {
 	internal static class Tracking
 	{

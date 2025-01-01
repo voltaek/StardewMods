@@ -1,11 +1,11 @@
-﻿using HoneyHarvestSync.Integrations;
+﻿using HoneyHarvestPredictor.Integrations;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace HoneyHarvestSync
+namespace HoneyHarvestPredictor
 {
     /// <summary>Contains logic and values to increase compatibility with other mods.</summary>
     internal class ModCompat

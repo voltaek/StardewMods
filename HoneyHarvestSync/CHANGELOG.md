@@ -5,6 +5,23 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [4.0.0] - 2025-01-01
+
+### Changed
+- Changed name of mod from 'Honey Harvest Sync' to 'Honey Harvest Predictor'.
+	- API was also renamed, hence the bump to v4.0.
+- Full rewrite of honey-flavor-source tracking to use event listeners instead of polling.
+- Replace range check with faster built-in function.
+
+### Fixed
+- Track bushes' harvested state rather than bloom state.
+- Refresh bee houses near any part of a harvested giant crop, not just its top left tile.
+- Clean up when returning to the title screen.
+
+### Added
+- Only check bee houses becoming ready throughout the day if they're not configured refresh daily (daily is the default).
+
+- 
 ## [3.0.0] - 2024-06-14
 
 ### Added

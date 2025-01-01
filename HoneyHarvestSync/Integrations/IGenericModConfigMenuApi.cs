@@ -1,7 +1,7 @@
 using System;
 using StardewModdingAPI;
 
-namespace HoneyHarvestSync.Integrations
+namespace HoneyHarvestPredictor.Integrations
 {
     /// <remarks>GenericModConfigMenu v1.12.0 - Only kept the functions we reference</remarks>
     /// <see href="https://github.com/spacechase0/StardewValleyMods/blob/develop/GenericModConfigMenu/IGenericModConfigMenuApi.cs"/>
