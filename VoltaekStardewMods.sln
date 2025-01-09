@@ -5,6 +5,8 @@ VisualStudioVersion = 17.8.34511.84
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "HoneyHarvestPredictor", "HoneyHarvestPredictor\HoneyHarvestPredictor.csproj", "{146977E3-22E0-47BB-A4A6-27F81F459488}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ColoredHoneyLabels", "ColoredHoneyLabels\ColoredHoneyLabels.csproj", "{F6DA5191-E73B-434F-805D-4EA42C9E59CC}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -15,6 +17,10 @@ Global
 		{146977E3-22E0-47BB-A4A6-27F81F459488}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{146977E3-22E0-47BB-A4A6-27F81F459488}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{146977E3-22E0-47BB-A4A6-27F81F459488}.Release|Any CPU.Build.0 = Release|Any CPU
+		{F6DA5191-E73B-434F-805D-4EA42C9E59CC}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{F6DA5191-E73B-434F-805D-4EA42C9E59CC}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{F6DA5191-E73B-434F-805D-4EA42C9E59CC}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{F6DA5191-E73B-434F-805D-4EA42C9E59CC}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
