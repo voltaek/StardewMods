@@ -2,7 +2,6 @@
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using StardewModdingAPI.Events;
-using StardewValley.GameData.Machines;
 using StardewValley.GameData.Objects;
 using StardewValley.ItemTypeDefinitions;
 using StardewValley.Menus;
@@ -34,7 +33,13 @@ namespace ColoredHoneyLabels
 			public const LogLevel BuildLogLevel = LogLevel.Trace;
 		#endif
 
-		public const string honeyObjectIndentifier = "340";
+		public const string honeyObjectUnqualifiedIndentifier = "340";
+
+
+		// TODO - Make this a GMCM option (so also add GMCM integration) and default to OFF
+
+		public const bool shouldVaryColors = true;
+
 
 		public static string ModAssetName_HoneyAndLabelMaskTexture
 		{
@@ -70,8 +75,8 @@ namespace ColoredHoneyLabels
 			}
 			catch (Exception ex)
 			{
-				Logger.Log($"An error occurred while registering a harmony patch for {nameof(ObjectDataDefinition)}.{nameof(ObjectDataDefinition.CreateFlavoredHoney)}. "
-					+ $"Exception Details:\n{ex}", LogLevel.Warn);
+				Logger.Log($"An error occurred while registering a Harmony patch for {nameof(ObjectDataDefinition)}.{nameof(ObjectDataDefinition.CreateFlavoredHoney)}. "
+					+ $"\nException Details:\n{ex}", LogLevel.Warn);
 			}
 		}
 
@@ -80,7 +85,7 @@ namespace ColoredHoneyLabels
 			if (e.NameWithoutLocale.IsEquivalentTo(ModAssetName_HoneyAndLabelMaskTexture))
 			{
 
-				// TODO - Test loading this with a higher priority in another mod to see if it get overridden properly
+				// TODO - Test loading this with a higher priority from inside another mod to see if it get overridden with the asset from that mod properly
 
 
 				e.LoadFromModFile<Texture2D>(ModAssetPath_HoneyAndLabelMaskTexture, AssetLoadPriority.Low);
@@ -91,7 +96,7 @@ namespace ColoredHoneyLabels
 				e.Edit(asset => {
 					IDictionary<string, ObjectData> objects = asset.AsDictionary<string, ObjectData>().Data;
 					
-					if (!objects.TryGetValue(honeyObjectIndentifier, out ObjectData? honeyDefinition) || honeyDefinition is null)
+					if (!objects.TryGetValue(honeyObjectUnqualifiedIndentifier, out ObjectData? honeyDefinition) || honeyDefinition is null)
 					{
 						Logger.LogOnce($"{nameof(OnAssetRequested)} - Failed to find Honey object's data definition", LogLevel.Warn);
 
@@ -108,32 +113,84 @@ namespace ColoredHoneyLabels
 
 		private static void CreateFlavoredHoney_ObjectDataDefinition_Postfix(ref SObject __result, SObject? ingredient)
 		{
-			Color wildHoneyLabelColor = Color.White;
-			Color labelColor = TailoringMenu.GetDyeColor(ingredient) ?? wildHoneyLabelColor;
-
-
-			// TODO - wrap entirely of this method's contents in a try/catch and log the exception as pointing to this mod
-
-			// LEFT OFF HERE
-
-
-			// TODO MAYBE - Vary brightness of label color depending on flower name to add more color variations.
-			// Probably a lighter variant and a darker variant of each color would be more than plenty, something like ~25% lighter or darker.
-			// Would need to test many variants to make sure they all work alright, since some colors might not work well
-			// with the current label mask when the base color varies too much from what it's been dialed-in to handle.
-			// Base game has these that might be helpful in addition to the XNA functions:
-			// Utility.RGBtoHSL()
-			// Utility.HSLtoRGB()
-
-
-			if (!ColoredObject.TrySetColor(__result, labelColor, out ColoredObject coloredHoney))
+			try
 			{
-				Logger.Log($"Failed to color the flavored honey object in {nameof(CreateFlavoredHoney_ObjectDataDefinition_Postfix)}", BuildLogLevel);
+				Color wildHoneyLabelColor = Color.White;
+				Color labelColor = TailoringMenu.GetDyeColor(ingredient) ?? wildHoneyLabelColor;
 
-				return;
+				if (!shouldVaryColors)
+				{
+					Logger.VerboseLog($"Label color: {labelColor.R} {labelColor.G} {labelColor.B} (RGB)");
+				}
+				else
+				{
+					if (!String.IsNullOrWhiteSpace(ingredient?.BaseName))
+					{
+						// Vary color based on the ingredient/honey flavor source.
+						int variant = ingredient.BaseName.ToCharArray().Select(Convert.ToInt32).Sum() % 2;
+						Logger.VerboseLog($"Ingredient '{ingredient.BaseName}' with {ingredient.GetContextTags().FirstOrDefault(x => x.StartsWith("color_"))}");
+
+						if (variant == 0)
+						{
+							Logger.VerboseLog($"Original color: {labelColor.R} {labelColor.G} {labelColor.B} (RGB)");
+							labelColor = ShiftColor(labelColor);
+							Logger.VerboseLog($"Shifted color using for label: {labelColor.R} {labelColor.G} {labelColor.B} (RGB)");
+						}
+						else
+						{
+							Logger.VerboseLog($"Color for label: {labelColor.R} {labelColor.G} {labelColor.B} (RGB)");
+						}
+					}
+					else
+					{
+						Logger.VerboseLog("No honey ingredient (such as for Wild Honey) or no ingredient BaseName value to potentially vary label color with");
+					}
+				}
+
+				if (!ColoredObject.TrySetColor(__result, labelColor, out ColoredObject coloredHoney))
+				{
+					Logger.Log($"Failed to color the flavored honey object in {nameof(CreateFlavoredHoney_ObjectDataDefinition_Postfix)}", BuildLogLevel);
+
+					return;
+				}
+
+				__result = coloredHoney;
+			}
+			catch (Exception ex)
+			{
+				Logger.Log($"An error occurred in the {nameof(CreateFlavoredHoney_ObjectDataDefinition_Postfix)} Harmony patch "
+					+ $"for {nameof(ObjectDataDefinition)}.{nameof(ObjectDataDefinition.CreateFlavoredHoney)}.\nException Details:\n{ex}", LogLevel.Warn);
+			}
+		}
+
+		/// <summary>
+		/// Shift a given color to a close, but distinct color. The new color should ideally be not too close to the next closest primary color.
+		/// </summary>
+		/// <param name="color">The color to shift</param>
+		/// <returns>The shifted color.</returns>
+		private static Color ShiftColor(Color color)
+		{
+			Utility.RGBtoHSL(color.R, color.G, color.B, out double colorHue, out double colorSat, out double colorLum);
+
+			// Darken bright colors
+			if (colorLum > 0.75)
+			{
+				colorLum -= 0.15;
+			}
+			// Hue-shift warm colors a little since their primary colors are close in hue number
+			else if (colorHue < 90)
+			{
+				colorHue += 15;
+			}
+			// Hue-shift other colors more
+			else
+			{
+				colorHue += 30;
 			}
 
-			__result = coloredHoney;
+			Utility.HSLtoRGB(colorHue, colorSat, colorLum, out int colorRed, out int colorGreen, out int colorBlue);
+			
+			return new Color(colorRed, colorGreen, colorBlue);
 		}
 	}
 }
