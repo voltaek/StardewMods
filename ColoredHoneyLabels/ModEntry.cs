@@ -151,9 +151,9 @@ namespace ColoredHoneyLabels
 				DoConsoleCommand);
 		}
 
-		/// <summary>Event handler for when the game launches.</summary>
-		/// <param name="sender">The event sender.</param>
-		/// <param name="e">The event arguments.</param>
+		/// <inheritdoc cref="IGameLoopEvents.GameLaunched"/>
+		/// <param name="sender">The event sender. This isn't applicable to SMAPI events, and is always null.</param>
+		/// <param name="e">The event data.</param>
 		private void OnGameLaunched(object? sender, GameLaunchedEventArgs e)
 		{
 			// Get Generic Mod Config Menu's API (if it's installed)
@@ -186,17 +186,22 @@ namespace ColoredHoneyLabels
 			);
 		}
 
+		/// <inheritdoc cref="IContentEvents.AssetRequested"/>
+		/// <param name="sender">The event sender. This isn't applicable to SMAPI events, and is always null.</param>
+		/// <param name="e">The event data.</param>
 		private void OnAssetRequested(object? sender, AssetRequestedEventArgs e)
 		{
+			// When our custom asset is requested, load it from our image file
 			if (e.NameWithoutLocale.IsEquivalentTo(ModAssetName_HoneyAndLabelMaskTexture))
 			{
-
-				// TODO - Test loading this with a higher priority from inside another mod to see if it get overridden with the asset from that mod properly
-
-
+				// This asset can be easily overridden in something as simple as Content Patcher mod with a Load entry that loads this same asset,
+				// just with a higher load priority set. This means any other mod that has a custom honey icon could create an image file with their
+				// base honey icon sprite on the left and a cover overlay mask on the right, and if that mod loaded that image into this asset,
+				// then this mod would use those sprites instead, allowing custom honey bottle sprites from the other mod to have automatically colored labels.
 				e.LoadFromModFile<Texture2D>(ModAssetPath_HoneyAndLabelMaskTexture, AssetLoadPriority.Low);
 			}
 
+			// When Objects data is loaded, make our edits to the Honey object definition.
 			if (e.NameWithoutLocale.IsEquivalentTo("Data/Objects"))
 			{
 				e.Edit(asset => {
@@ -209,6 +214,7 @@ namespace ColoredHoneyLabels
 						return;
 					}
 
+					// Use our texture image from our custom asset which has a color overlay mask next to the honey sprite.
 					honeyDefinition.ColorOverlayFromNextIndex = true;
 					honeyDefinition.Texture = ModAssetName_HoneyAndLabelMaskTexture;
 					honeyDefinition.SpriteIndex = 0;
@@ -217,6 +223,9 @@ namespace ColoredHoneyLabels
 			}
 		}
 
+		/// <summary>Harmony postfix for `ObjectDataDefinition.CreateFlavoredHoney()`.</summary>
+		/// <param name="__result">The returned value from calling the original method.</param>
+		/// <param name="ingredient">The ingredient param that was given to the original method.</param>
 		private static void CreateFlavoredHoney_ObjectDataDefinition_Postfix(ref SObject __result, SObject? ingredient)
 		{
 			try
