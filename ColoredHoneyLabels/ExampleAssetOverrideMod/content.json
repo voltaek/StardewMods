@@ -1,0 +1,16 @@
+{
+	"Format": "2.5.0",
+	"Changes": [
+		{
+			// Ref: https://github.com/Pathoschild/StardewMods/blob/develop/ContentPatcher/docs/author-guide/action-load.md
+			"Action": "Load",
+			"Target": "Mods/voltaek.ColoredHoneyLabels/HoneyAndLabelMask",
+			
+			// Replace this with the filename of your texture PNG file that you place in your mod's "assets" folder.
+			"FromFile": "assets/example-honey-and-label-mask.png",
+			
+			// Anything above 'Low' will work to override the main mod's asset.
+			"Priority": "Medium",
+		}
+	]
+}

@@ -8,4 +8,9 @@
     <EnableHarmony>true</EnableHarmony>
     <Nullable>enable</Nullable>
   </PropertyGroup>
+  <ItemGroup>
+    <Compile Remove="ExampleAssetOverrideMod\**" />
+    <EmbeddedResource Remove="ExampleAssetOverrideMod\**" />
+    <None Remove="ExampleAssetOverrideMod\**" />
+  </ItemGroup>
 </Project>
