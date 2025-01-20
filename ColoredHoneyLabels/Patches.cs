@@ -45,6 +45,14 @@ namespace ColoredHoneyLabels
 		{
 			try
 			{
+				if (ModEntry.HasRunUndoHoneyColorsCommand)
+				{
+					Logger.Log($"Skipping coloring the honey object in {nameof(CreateFlavoredHoney_ObjectDataDefinition_Postfix)} "
+						+ $"due to the {ConsoleCommands.UndoHoneyColors} console command having been run.", LogLevel.Debug);
+
+					return;
+				}
+
 				Color wildHoneyLabelColor = Color.White;
 				Color labelColor = TailoringMenu.GetDyeColor(ingredient) ?? wildHoneyLabelColor;
 
@@ -83,6 +91,9 @@ namespace ColoredHoneyLabels
 
 					return;
 				}
+
+				// Mark the object as having been modified by this mod
+				coloredHoney.modData.Add(ModEntry.ModDataKey_HasColoredLabel, "1");
 
 				__result = coloredHoney;
 			}

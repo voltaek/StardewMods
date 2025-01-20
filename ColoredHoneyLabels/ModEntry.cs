@@ -33,6 +33,7 @@ namespace ColoredHoneyLabels
 		#endif
 
 		public const string HoneyObjectUnqualifiedIndentifier = "340";
+		public static readonly string HoneyObjectQualifiedIndentifier = $"(O){HoneyObjectUnqualifiedIndentifier}";
 		public const string ModAssetPath_HoneyAndLabelMaskTexture = "assets/honey-and-label-mask.png";
 
 		public static string ModAssetName_HoneyAndLabelMaskTexture
@@ -40,8 +41,20 @@ namespace ColoredHoneyLabels
 			get { return $"Mods/{Context.ModManifest.UniqueID}/HoneyAndLabelMask"; }
 		}
 
-		/// <summary>The mod entry point, called after the mod is first loaded.</summary>
-		/// <param name="helper">Provides simplified APIs for writing mods.</param>
+		public static string ModDataKey_HasColoredLabel
+		{
+			get { return $"{Context.ModManifest.UniqueID}_has_colored_label"; }
+		}
+
+		// NOTE - These are all reset in our `OnReturnedToTitle` handler
+		internal static bool DefaultHoneyColorOverlayFromNextIndex;
+		internal static string? DefaultHoneyTexture;
+		internal static int DefaultHoneySpriteIndex;
+		private static bool HasCollectedDefaultHoneyObjectDataValues = false;
+		internal static bool HasRunUndoHoneyColorsCommand = false;
+		internal static bool HasRestoredDefaultHoneyData = false;
+
+		/// <inheritdoc cref="IMod.Entry"/>
 		public override void Entry(IModHelper helper)
 		{
 			Context = this;
@@ -50,25 +63,23 @@ namespace ColoredHoneyLabels
 			// Read user's config
 			Config = Helper.ReadConfig<ModConfig>();
 
-
-
-			// TODO - Test honey from before mod install and after mod removal
-
-
-
-			// Rig up event handler to set up Generic Mod Config Menu integration
+			// Set up Generic Mod Config Menu integration
 			Helper.Events.GameLoop.GameLaunched += OnGameLaunched;
+
+			// Reset things between save games
+			Helper.Events.GameLoop.ReturnedToTitle += OnReturnedToTitle;
 
 			// Add our custom asset and modify the honey object's definition
 			Helper.Events.Content.AssetRequested += OnAssetRequested;
 
+			// Apply Harmony patches so that honey items are created as the `ColoredObject` type and get their color assigned to them.
 			Patches.ApplyPatches();
+
+			// Register our custom console commands
 			ConsoleCommands.AddCommands();
 		}
 
 		/// <inheritdoc cref="IGameLoopEvents.GameLaunched"/>
-		/// <param name="sender">The event sender. This isn't applicable to SMAPI events, and is always null.</param>
-		/// <param name="e">The event data.</param>
 		private void OnGameLaunched(object? sender, GameLaunchedEventArgs e)
 		{
 			// Get Generic Mod Config Menu's API (if it's installed)
@@ -101,9 +112,18 @@ namespace ColoredHoneyLabels
 			);
 		}
 
+		/// <inheritdoc cref="IGameLoopEvents.ReturnedToTitle"/>
+		private void OnReturnedToTitle(object? sender, ReturnedToTitleEventArgs e)
+		{
+			DefaultHoneyColorOverlayFromNextIndex = default;
+			DefaultHoneyTexture = default;
+			DefaultHoneySpriteIndex = default;
+			HasCollectedDefaultHoneyObjectDataValues = false;
+			HasRunUndoHoneyColorsCommand = false;
+			HasRestoredDefaultHoneyData = false;
+		}
+
 		/// <inheritdoc cref="IContentEvents.AssetRequested"/>
-		/// <param name="sender">The event sender. This isn't applicable to SMAPI events, and is always null.</param>
-		/// <param name="e">The event data.</param>
 		private void OnAssetRequested(object? sender, AssetRequestedEventArgs e)
 		{
 			// When our custom asset is requested, load it from our image file
@@ -124,15 +144,46 @@ namespace ColoredHoneyLabels
 					
 					if (!objects.TryGetValue(HoneyObjectUnqualifiedIndentifier, out ObjectData? honeyDefinition) || honeyDefinition is null)
 					{
-						Logger.LogOnce($"{nameof(OnAssetRequested)} - Failed to find Honey object's data definition", LogLevel.Warn);
+						// If we can't edit the honey object data, then when our Harmony patch makes honey items be a `ColoredObject` type,
+						// it should just "tint" the entire default honey sprite itself due to `ColorOverlayFromNextIndex` being `false` by default.
+						Logger.LogOnce($"{nameof(OnAssetRequested)} - Failed to find Honey object's data definition. "
+							+ $"Will be unable to customize honey item labels, but honey items may still get some color applied to them.", LogLevel.Warn);
 
 						return;
 					}
 
-					// Use our texture image from our custom asset which has a color overlay mask next to the honey sprite.
-					honeyDefinition.ColorOverlayFromNextIndex = true;
-					honeyDefinition.Texture = ModAssetName_HoneyAndLabelMaskTexture;
-					honeyDefinition.SpriteIndex = 0;
+					// Hold onto these in case we need to restore them, such as if the Undo Honey Colors command is run.
+					if (!HasCollectedDefaultHoneyObjectDataValues)
+					{
+						DefaultHoneyColorOverlayFromNextIndex = honeyDefinition.ColorOverlayFromNextIndex;
+						DefaultHoneyTexture = honeyDefinition.Texture;
+						DefaultHoneySpriteIndex = honeyDefinition.SpriteIndex;
+
+						HasCollectedDefaultHoneyObjectDataValues = true;
+					}
+
+					// If the user has run the Undo Honey Colors command, then restore the honey object data default values.
+					if (HasRunUndoHoneyColorsCommand)
+					{
+						// Only restore it once.
+						if (!HasRestoredDefaultHoneyData)
+						{
+							honeyDefinition.ColorOverlayFromNextIndex = DefaultHoneyColorOverlayFromNextIndex;
+							honeyDefinition.Texture = DefaultHoneyTexture;
+							honeyDefinition.SpriteIndex = DefaultHoneySpriteIndex;
+
+							HasRestoredDefaultHoneyData = true;
+
+							Logger.Log($"{nameof(OnAssetRequested)} - Restored default Honey object data definition values", LogLevel.Info);
+						}
+					}
+					else
+					{
+						// The normal case: Use our texture image from our custom asset which has a color overlay mask next to the honey sprite.
+						honeyDefinition.ColorOverlayFromNextIndex = true;
+						honeyDefinition.Texture = ModAssetName_HoneyAndLabelMaskTexture;
+						honeyDefinition.SpriteIndex = 0;
+					}
 
 				}, AssetEditPriority.Late);
 			}
