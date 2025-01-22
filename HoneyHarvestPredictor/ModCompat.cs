@@ -50,7 +50,7 @@ namespace HoneyHarvestPredictor
 		 * Ref: https://www.nexusmods.com/stardewvalley/mods/10996
 		 */
 		private const string betterBeehousesUniqueID = "tlitookilakin.BetterBeehouses";
-		private const string minimumBetterBeehousesVersion = "2.1.1";
+		private const string minimumBetterBeehousesVersion = "2.1.3";
 
 		private const bool canBetterBeehousesAllowIndoorBeehouses = true;
 		public const string betterBeehousesModDataSourceTypeKey = "tlitookilakin.BetterBeehouses.SourceType";
