@@ -1,0 +1,20 @@
+{
+  /*
+   | This file is automatically updated by ModManifestBuilder
+   | when the project is compiled.
+   | 
+   | Changes made to this file may be overwritten.
+   | 
+   */
+  "UniqueID": "voltaek.ColoredHoneyLabels",
+  "Name": "Colored Honey Labels",
+  "Author": "voltaek",
+  "Version": "1.0.0",
+  "Description": "Colors honey bottle labels automatically by honey type.",
+  "MinimumApiVersion": "4.1.10",
+  "MinimumGameVersion": "1.6.15",
+  "EntryDll": "ColoredHoneyLabels.dll",
+  "UpdateKeys": [
+    "Nexus:30945"
+  ]
+}
