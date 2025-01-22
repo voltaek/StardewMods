@@ -18,7 +18,7 @@ You can either have it show you the flower that will flavor the honey or the hon
 
 ( [Source](ColoredHoneyLabels)
 | [Changelog](ColoredHoneyLabels/CHANGELOG.md)
-| [Docs](ColoredHoneyLabels/README.md)
+| [Integration Docs](ColoredHoneyLabels/README.md)
 | [Example Asset Override Mod](ColoredHoneyLabels/ExampleAssetOverrideMod) )
 
 Colors honey bottle labels automatically by honey type.
