@@ -1,0 +1,13 @@
+{
+	"UniqueID": "voltaek.ColoredHoneyLabelsExampleAssetOverride",
+	"Name": "Colored Honey Labels Example Asset Override",
+	"Author": "voltaek",
+	"Version": "0.0.1",
+	"Description": "Example mod for overriding the Colored Honey Labels mod's custom honey bottle asset.",
+	"MinimumApiVersion": "4.1.10",
+	"MinimumGameVersion": "1.6.15",
+	"UpdateKeys": [], // when you release the mod, see https://stardewvalleywiki.com/Modding:Modder_Guide/APIs/Update_checks
+	"ContentPackFor": {
+		"UniqueID": "Pathoschild.ContentPatcher"
+	}
+}

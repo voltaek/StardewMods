@@ -1,4 +1,5 @@
 ﻿using Microsoft.Xna.Framework;
+using StardewValley.GameData.Machines;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -6,10 +7,70 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace HoneyHarvestSync
+namespace HoneyHarvestPredictor
 {
 	internal static class Utilities
 	{
+		/// <summary>
+		/// Returns a string the uniquely identifies the current in-game day.
+		/// </summary>
+		internal static string UniqueDay
+		{
+			get { return $"Year_{Game1.year}-{Game1.season}-Day_{Game1.dayOfMonth}"; }
+		}
+
+		/// <summary>
+		/// Shorthand property for creating a verbose log entry header.
+		/// We want to use the verbose log method directly for best performance, both when actually using verbose and not.
+		/// </summary>
+		internal static string VerboseStart
+		{
+			// Show microsecond, so we can tell if something is slow.
+			get { return ModEntry.Logger.IsVerbose ? DateTime.Now.ToString("ffffff") : String.Empty; }
+		}
+
+		/// <summary>
+		/// Shorthand method for creating a standard log entry, depending on debug build or not.
+		/// </summary>
+		/// <param name="message">The message to log.</param>
+		internal static void Log(string message) => ModEntry.Logger.Log(message, Constants.buildLogLevel);
+
+		internal static int MinutesUntilEndOfDay
+		{
+			get { return Constants.maxMinutesAwake - Utility.CalculateMinutesBetweenTimes(Constants.startOfDayTime, Game1.timeOfDay); }
+		}
+
+		internal static MachineData BeeHouseMachineData
+		{
+			get { return DataLoader.Machines(Game1.content).GetValueOrDefault(Constants.beeHouseQualifiedItemID); }
+		}
+
+		private static bool areAllBeeHouseOutputRulesByDay = false;
+		private static string beeHouseDailyRefreshCheckTimestamp = String.Empty;
+
+		/// <summary>Whether or not we can be sure that bee houses only refresh overnight.</summary>
+		internal static bool DoBeeHousesOnlyRefreshDaily
+		{
+			get
+			{
+				if (beeHouseDailyRefreshCheckTimestamp == UniqueDay)
+				{
+					return areAllBeeHouseOutputRulesByDay;
+				}
+
+				// We have to check two things to determine if bee houses only refresh in full day increments AKA only at 6am each morning:
+				// * If all the rules have days defined (AKA are not -1), then days are used, regardless of if minutes are defined or not.
+				// * If any ready-time modifiers are defined, then we can't assume anything about when bee houses will be ready.
+				areAllBeeHouseOutputRulesByDay = (BeeHouseMachineData?.OutputRules?.All(rule => rule.DaysUntilReady >= 0) ?? false)
+					&& ((BeeHouseMachineData?.ReadyTimeModifiers?.Count ?? 0) == 0);
+				
+				// Note when we last checked so we check fresh each day, just in case something changes.
+				beeHouseDailyRefreshCheckTimestamp = UniqueDay;
+
+				return areAllBeeHouseOutputRulesByDay;
+			}
+		}
+
 		/// <summary>
 		/// Whether the given item has characteristics that identify it as a potential honey-flavor source.
 		/// </summary>
@@ -28,6 +89,26 @@ namespace HoneyHarvestSync
 		internal static bool IsLocationWithBeeHouses(GameLocation location)
 		{
 			return (location.IsOutdoors || ModEntry.Compat.SyncIndoorBeeHouses) && location.Objects.Values.Any(x => x.QualifiedItemId == Constants.beeHouseQualifiedItemID);
+		}
+
+		/// <summary>
+		/// This uses a base game method that handles all of our needs (caching + inside locs), plus will do a `LogOnce` for a location if it can't be found.
+		/// We can't really trust a Location property on - for example - a TerrainFeature or ResourceClump since it gets set to `null` when they're removed by the game
+		/// from its location's list of them, so we fetch location instances ourselves instead of trying to use an instance's location property.
+		/// </summary>
+		/// <param name="locationName">The game's name for a location</param>
+		/// <returns>The `GameLocation` object if found; `null` if not.</returns>
+		internal static GameLocation FetchLocationByName(string locationName)
+		{
+			// This base game method will get from cache where possible and handles locations which are buildings.
+			GameLocation location = Game1.getLocationFromName(locationName);
+
+			if (location == null)
+			{
+				ModEntry.Logger.LogOnce($"Failed to get GameLocation with location name '{locationName}'. Will be unable to refresh bee houses in this location.", LogLevel.Warn);
+			}
+
+			return location;
 		}
 
 		/// <summary>
@@ -55,36 +136,7 @@ namespace HoneyHarvestSync
 		/// <returns>True if the location is within range, False if not.</returns>
 		internal static bool IsWithinFlowerRange(Vector2 checkLocation, Vector2 flowerLocation)
 		{
-			int flowerRange = ModEntry.Compat.FlowerRange;
-
-			// Start with a quick check to see if it's in a square of the radius size since that's much faster to check
-			if (!(checkLocation.X <= flowerLocation.X + flowerRange && checkLocation.X >= Math.Max(flowerLocation.X - flowerRange, 0)
-				&& checkLocation.Y <= flowerLocation.Y + flowerRange && checkLocation.Y >= Math.Max(flowerLocation.Y - flowerRange, 0)))
-			{
-				return false;
-			}
-
-			int yCheck = 0;
-			int xCheck = flowerRange;
-
-			// This does kind of "middle out" checking of the diamond shape so we hit the horizontal rows with the most tiles first.
-			// We start with the full-width middle row, then check the row above AND below that one at once, but with one less tile on each horizontal side,
-			// then continue checking above and below those ones, each time checking less horizontal tiles, until we finish by checking the topmost tile and bottommost tile.
-			// In testing, doing it this way takes on average about half the checks versus scanning from topmost tile down each row until bottommost tile.
-			while (yCheck <= flowerRange)
-			{
-				if ((checkLocation.Y == flowerLocation.Y + yCheck || (yCheck != 0 && checkLocation.Y == Math.Max(flowerLocation.Y - yCheck, 0)))
-					&& checkLocation.X >= Math.Max(flowerLocation.X - xCheck, 0)
-					&& checkLocation.X <= flowerLocation.X + xCheck)
-				{
-					return true;
-				}
-
-				yCheck += 1;
-				xCheck -= 1;
-			}
-
-			return false;
+			return Vector2.Distance(checkLocation, flowerLocation) <= ModEntry.Compat.FlowerRange;
 		}
 
 		internal static void TestIsWithinFlowerRange(bool shouldTestDebugLocations = true, bool shouldTestRandomLocations = false)

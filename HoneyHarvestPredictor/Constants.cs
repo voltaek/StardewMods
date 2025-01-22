@@ -1,10 +1,11 @@
-﻿using System;
+﻿using StardewValley.TerrainFeatures;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace HoneyHarvestSync
+namespace HoneyHarvestPredictor
 {
 	public class Constants
 	{
@@ -23,8 +24,17 @@ namespace HoneyHarvestSync
 		/// <summary>The globally unique identifier for Garden Pot AKA `IndoorPot`.</summary>
 		public const string gardenPotQualifiedItemID = "(BC)62";
 
+		/// <summary>The HoeDirt class's private netfield that backs its 'crop' property.</summary>
+		public const string HoeDirtNetCropPropertyName = "netCrop";
+
+		/// <summary>
+		/// This is the 'Name' property that the HoeDirt class's 'netCrop' property gets registered in a HoeDirt instances's 'NetFields' collection property.
+		/// Ref: Netcode/NetFields.cs -> GetNameForInstance() and AddField()
+		/// </summary>
+		public const string HoeDirtNetCropNetFieldName = $"{nameof(TerrainFeature)} ({nameof(HoeDirt)}): {HoeDirtNetCropPropertyName}";
+
 		/// <summary>The console command for refreshing things.</summary>
-		public const string consoleCommandRefresh = "hhs_refresh";
+		public const string consoleCommandRefresh = "hhp_refresh";
 
 		// For debug builds, show log messages as DEBUG so they show in the SMAPI console.
 		#if DEBUG
@@ -32,5 +42,15 @@ namespace HoneyHarvestSync
 		#else
 		public const LogLevel buildLogLevel = LogLevel.Trace;
 		#endif
+
+		public static string ModDataKey_BeeHouseReadyTempDisplayObject
+		{
+			get { return $"{ModEntry.Context.ModManifest.UniqueID}_BeeHouseReadyTempDisplayObject"; }
+		}
+
+		public static string ModDataKey_TrackingGuid
+		{
+			get { return $"{ModEntry.Context.ModManifest.UniqueID}_TrackingGuid"; }
+		}
 	}
 }

@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace HoneyHarvestSync
+namespace HoneyHarvestPredictor
 {
 	public sealed class ModConfig
 	{
