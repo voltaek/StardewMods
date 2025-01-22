@@ -1,6 +1,6 @@
 # Colored Honey Labels
 
-## How to integrate your own honey bottle (and label tint mask) to load into this mod's custom asset:
+## How to load your own honey bottle sprite into this mod's custom texture asset
 
 For your mod to replace the texture with the honey bottle and label tint mask sprites - which is assigned by this mod to the honey object -
 you just need to load your own PNG image into the custom texture asset at a higher priority than this mod does it at; so anything higher than "Low".
