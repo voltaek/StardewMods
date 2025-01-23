@@ -14,6 +14,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Changed name of mod from 'Honey Harvest Sync' to 'Honey Harvest Predictor'.
 	- API was also renamed, hence the full version bump to v4.0.
 	- Console command `hhs_refresh` renamed to `hhp_refresh`.
+- Compatibility with Better Beehouses (an optional dependency) now requires at least version v2.1.3.
 - Full rewrite of honey-flavor-source tracking to use event listeners instead of polling.
 - Replace custom bee house range check with faster built-in function.
 
@@ -98,6 +99,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 - Initial release.
 
+[4.0.0]: https://github.com/voltaek/StardewMods/releases/tag/HHP-v4.0.0
 [3.0.0]: https://github.com/voltaek/StardewMods/releases/tag/v3.0.0
 [3.0.0-beta.1]: https://github.com/voltaek/StardewMods/releases/tag/v3.0.0-beta.1
 [2.0.1]: https://github.com/voltaek/StardewMods/releases/tag/v2.0.1
