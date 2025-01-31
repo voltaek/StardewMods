@@ -1,0 +1,31 @@
+{
+	"Format": "2.5.0",
+	"Changes": [
+		// First, load your sprites PNG (of your honey and label tint mask) into a new custom texture asset.
+		{
+			// Ref: https://github.com/Pathoschild/StardewMods/blob/develop/ContentPatcher/docs/author-guide/action-load.md
+			"Action": "Load",
+			"Target": "Mods/{{ModId}}/HoneyAndLabelTexture",
+			"LogName": "Load sprite PNG into texture",
+			
+			// Replace this with the filename of your sprites PNG file that you place in your mod's "assets" folder.
+			"FromFile": "assets/basic-example-sprites.png",
+		},
+		// Then, edit a new entry into the CHL's sprite data dictionary.
+		{
+			"Action": "EditData",
+			"Target": "Mods/voltaek.ColoredHoneyLabels/SpriteData",
+			"LogName": "Edit entry into CHL sprite data dictionary",
+			"Entries": {
+				// The dictionary key you put here will end up stored into user's CHL config files, so please make it both readable and unique.
+				// The ideal way to make it unique is to include your mod's unique ID in it, which has the benefit of identifying its origins.
+				"{{ModId}}_basic_example_sprites": {
+					// A short, descriptive name; should probably include your mod's name in it.
+					"DisplayName": "Basic Example Sprites",
+					// The texture target you loaded into you above in the "Load" step.
+					"TextureName": "Mods/{{ModId}}/HoneyAndLabelTexture",
+				}
+			},
+		}
+	]
+}

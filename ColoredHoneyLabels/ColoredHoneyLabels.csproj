@@ -1,7 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <Name>Colored Honey Labels</Name>
-    <Version>1.0.0</Version>
+    <Version>2.0.0</Version>
     <Description>Colors honey bottle labels automatically by honey type.</Description>
     <UniqueId>voltaek.ColoredHoneyLabels</UniqueId>
     <UpdateKeys>Nexus:30945</UpdateKeys>
@@ -9,8 +9,8 @@
     <Nullable>enable</Nullable>
   </PropertyGroup>
   <ItemGroup>
-    <Compile Remove="ExampleAssetOverrideMod\**" />
-    <EmbeddedResource Remove="ExampleAssetOverrideMod\**" />
-    <None Remove="ExampleAssetOverrideMod\**" />
+    <Compile Remove="ExampleIntegrationMods\**" />
+    <EmbeddedResource Remove="ExampleIntegrationMods\**" />
+    <None Remove="ExampleIntegrationMods\**" />
   </ItemGroup>
 </Project>

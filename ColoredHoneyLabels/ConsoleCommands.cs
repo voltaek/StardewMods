@@ -11,10 +11,15 @@ namespace ColoredHoneyLabels
 {
 	internal class ConsoleCommands
 	{
+		/// <summary>Shorthand for the main logger instance.</summary>
+		private static IMonitor Logger => ModEntry.Logger;
+
 		public const string UndoHoneyColors = "chl_undo_honey_colors";
 		public const string GiveTestHoney = "chl_give_test_honey";
 		public const string GiveTestHoneyList = "chl_give_test_honey_list";
 		public const string ClearInventoryHoney = "chl_clear_inventory_honey";
+
+		public static bool HasRunUndoHoneyColorsCommand { get; private set; } = false;
 
 		public static readonly List<string> TestHoneyIngredientIdentifiers = new() {
 			// Spring
@@ -56,10 +61,12 @@ namespace ColoredHoneyLabels
 
 		private static int TestHoneyIngredientListLastOutputIndex = -1;
 
-		/// <summary>Shorthand for the main logger instance.</summary>
-		private static IMonitor Logger
+		/// <summary>
+		/// Reset tracked values that were changed when the user ran the console command to undo all colored honey objects.
+		/// </summary>
+		internal static void ResetUndoHoneyColors()
 		{
-			get { return ModEntry.Logger; }
+			HasRunUndoHoneyColorsCommand = false;
 		}
 
 		/// <summary>Initialize our custom console commands.</summary>
@@ -116,32 +123,31 @@ namespace ColoredHoneyLabels
 			try
 			{
 				// Mark that this command has been run so we can start the process of reverting our data and object edits.
-				ModEntry.HasRunUndoHoneyColorsCommand = true;
+				HasRunUndoHoneyColorsCommand = true;
 
 				// By resetting the cache, our asset requested event handler can restore the default honey object data values.
 				// Then when creating a new object below, it will be created with the proper default values.
-				ModEntry.Context.Helper.GameContent.InvalidateCache("Data/Objects");
+				ModEntry.Context.Helper.GameContent.InvalidateCache(Constants.HoneyObjectParentAssetName);
 
 				// Go through all items in the game world to update the relevant honey objects
 				StardewValley.Utility.ForEachItemContext(delegate (in ForEachItemContext context)
 				{
-					if (context.Item.QualifiedItemId != ModEntry.HoneyObjectQualifiedIndentifier
-						|| !context.Item.modData.Keys.Contains(ModEntry.ModDataKey_HasColoredLabel))
+					if (context.Item.QualifiedItemId != Constants.HoneyObjectQualifiedIndentifier
+						|| !context.Item.modData.Keys.Contains(Constants.ModDataKey_HasColoredLabel))
 					{
 						return true;
 					}
 
 					// If we're not retrying all objects and we've previously "restored" this object, then skip it.
-					if (!shouldRetryAll && context.Item.modData[ModEntry.ModDataKey_HasColoredLabel] == "0")
+					if (!shouldRetryAll && context.Item.modData[Constants.ModDataKey_HasColoredLabel] == "0")
 					{
 						return true;
 					}
 
 					// Update the mod data entry we added to mark this mod as having modified it
-					context.Item.modData[ModEntry.ModDataKey_HasColoredLabel] = "0";
+					context.Item.modData[Constants.ModDataKey_HasColoredLabel] = "0";
 
 					// Change our `ColoredObject` back to an `Object`, as it is in vanilla.
-					// This also sets our texture and sprite index back to the default ones.
 					SObject honeyObject = new(context.Item.ItemId, context.Item.Stack);
 					
 					// Restore all field values from the original object
@@ -290,7 +296,7 @@ namespace ColoredHoneyLabels
 				+ (args?.Length > 0 ? ": " + String.Join(", ", args.Select(x => $"'{x}'")) : ""), LogLevel.Trace);
 
 			// Simply clear all honey items from the farmer's inventory
-			Game1.player.Items.RemoveWhere(x => x?.QualifiedItemId == ModEntry.HoneyObjectQualifiedIndentifier);
+			Game1.player.Items.RemoveWhere(x => x?.QualifiedItemId == Constants.HoneyObjectQualifiedIndentifier);
 		}
 
 		/// <summary>

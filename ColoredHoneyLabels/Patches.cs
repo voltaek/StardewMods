@@ -14,10 +14,7 @@ namespace ColoredHoneyLabels
 	internal class Patches
 	{
 		/// <summary>Shorthand for the main logger instance.</summary>
-		private static IMonitor Logger
-		{
-			get { return ModEntry.Logger; }
-		}
+		private static IMonitor Logger => ModEntry.Logger;
 
 		public static void ApplyPatches()
 		{
@@ -45,7 +42,7 @@ namespace ColoredHoneyLabels
 		{
 			try
 			{
-				if (ModEntry.HasRunUndoHoneyColorsCommand)
+				if (ConsoleCommands.HasRunUndoHoneyColorsCommand)
 				{
 					Logger.Log($"Skipping coloring the honey object in {nameof(CreateFlavoredHoney_ObjectDataDefinition_Postfix)} "
 						+ $"due to the {ConsoleCommands.UndoHoneyColors} console command having been run.", LogLevel.Debug);
@@ -87,13 +84,13 @@ namespace ColoredHoneyLabels
 
 				if (!ColoredObject.TrySetColor(__result, labelColor, out ColoredObject coloredHoney))
 				{
-					Logger.Log($"Failed to color the flavored honey object in {nameof(CreateFlavoredHoney_ObjectDataDefinition_Postfix)}", ModEntry.BuildLogLevel);
+					Logger.Log($"Failed to color the flavored honey object in {nameof(CreateFlavoredHoney_ObjectDataDefinition_Postfix)}", Constants.BuildLogLevel);
 
 					return;
 				}
 
 				// Mark the object as having been modified by this mod
-				coloredHoney.modData.Add(ModEntry.ModDataKey_HasColoredLabel, "1");
+				coloredHoney.modData.Add(Constants.ModDataKey_HasColoredLabel, "1");
 
 				__result = coloredHoney;
 			}

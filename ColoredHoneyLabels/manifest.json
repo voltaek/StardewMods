@@ -9,7 +9,7 @@
   "UniqueID": "voltaek.ColoredHoneyLabels",
   "Name": "Colored Honey Labels",
   "Author": "voltaek",
-  "Version": "1.0.0",
+  "Version": "2.0.0",
   "Description": "Colors honey bottle labels automatically by honey type.",
   "MinimumApiVersion": "4.1.10",
   "MinimumGameVersion": "1.6.15",
