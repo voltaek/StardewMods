@@ -76,7 +76,7 @@ namespace ColoredHoneyLabels
 				mod: ModEntry.Context.ModManifest,
 				name: () => "Honey Sprite",
 				tooltip: () => "Select the honey sprite to use from this or other mods' compatible options.",
-				getValue: () => SpriteDataKey ?? AssetManager.DefaultSpriteDataKey,
+				getValue: () => String.IsNullOrWhiteSpace(SpriteDataKey) ? AssetManager.DefaultSpriteDataKey : SpriteDataKey,
 				setValue: value => {
 					string? oldValue = SpriteDataKey;
 					SpriteDataKey = value;

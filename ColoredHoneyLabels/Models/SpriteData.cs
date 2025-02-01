@@ -10,10 +10,6 @@ namespace ColoredHoneyLabels.Models
 	{
 		public string? TextureName { get; set; }
 
-		public int SpriteIndex { get; set; } = 0;
-
-		public bool ColorOverlayFromNextIndex { get; set; } = true;
-
 		private string? displayName;
 		public string? DisplayName
 		{
@@ -26,6 +22,18 @@ namespace ColoredHoneyLabels.Models
 			{
 				displayName = value?.Trim();
 			}
+		}
+
+		public int SpriteIndex { get; set; } = 0;
+
+		public bool ColorOverlayFromNextIndex { get; set; } = true;
+
+		public override string ToString()
+		{
+			return $"{nameof(TextureName)}: '{TextureName}' | "
+				+ $"{nameof(DisplayName)}: '{displayName}' | "
+				+ $"{nameof(SpriteIndex)}: '{SpriteIndex}' | "
+				+ $"{nameof(ColorOverlayFromNextIndex)}: '{ColorOverlayFromNextIndex}'";
 		}
 	}
 }

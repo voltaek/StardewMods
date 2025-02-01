@@ -96,11 +96,9 @@ namespace ColoredHoneyLabels
 			{
 				if (String.IsNullOrWhiteSpace(ModEntry.Config.SpriteDataKey))
 				{
-					Logger.Log($"Selected Honey Sprite data key is missing. Resetting selected Honey Sprite to the default.", LogLevel.Info);
+					Logger.Log($"Selected 'Honey Sprite' config option is blank or missing. Using default honey sprite.", LogLevel.Info);
 
 					ModEntry.Config.SpriteDataKey = DefaultSpriteDataKey;
-
-					RefreshHoneyData();
 				}
 
 				string spriteDataKey = ModEntry.Config.SpriteDataKey;
@@ -109,13 +107,10 @@ namespace ColoredHoneyLabels
 				{
 					if (selectedSpriteData == null || String.IsNullOrWhiteSpace(selectedSpriteData.TextureName) || selectedSpriteData.SpriteIndex < 0)
 					{
-						Logger.Log($"Selected Honey Sprite data (entry key '{spriteDataKey}') is invalid. "
-							+ $"Resetting selected Honey Sprite to the default.", LogLevel.Info);
+						Logger.Log($"Selected 'Honey Sprite' data for config option key '{spriteDataKey}' is invalid. Using default honey sprite.", LogLevel.Info);
 						Logger.Log($"Selected Sprite Data: {selectedSpriteData}", Constants.BuildLogLevel);
 
 						ModEntry.Config.SpriteDataKey = DefaultSpriteDataKey;
-
-						RefreshHoneyData();
 
 						return DefaultSpriteData;
 					}
@@ -123,8 +118,9 @@ namespace ColoredHoneyLabels
 					return selectedSpriteData;
 				}
 
-				Logger.Log($"{nameof(SelectedSpriteData)} - Honey Sprite data entry (key '{spriteDataKey}') not found. "
-					+ $"Returning default Honey Sprite data.", Constants.BuildLogLevel);
+				Logger.Log($"Selected 'Honey Sprite' data entry not found for config option key '{spriteDataKey}'. Using default honey sprite.", Constants.BuildLogLevel);
+
+				ModEntry.Config.SpriteDataKey = DefaultSpriteDataKey;
 
 				return DefaultSpriteData;
 			}
