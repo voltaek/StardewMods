@@ -49,8 +49,9 @@
 				// The ideal way to make it unique is to include your mod's unique ID in it, which has the benefit of identifying its origins.
 				"{{ModId}}_intermediate_example_sprites": {
 					// A short, descriptive name; should probably include your mod's name in it.
+					// This text must fit in the 'Honey Sprite' config option list, so keep it as short as possible.
 					"DisplayName": "Intermediate Example Sprites",
-					// The texture target you loaded into you above in the "Load" step.
+					// The texture target you loaded your texture into above in the "Load" step.
 					"TextureName": "Mods/{{ModId}}/HoneyAndLabelTexture",
 				}
 			},

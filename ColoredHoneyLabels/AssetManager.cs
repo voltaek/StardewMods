@@ -94,10 +94,37 @@ namespace ColoredHoneyLabels
 		{
 			get
 			{
-				if (AllSpriteData.TryGetValue(ModEntry.Config.SpriteDataKey ?? DefaultSpriteDataKey, out SpriteData? selectedSpriteData))
+				if (String.IsNullOrWhiteSpace(ModEntry.Config.SpriteDataKey))
 				{
-					return selectedSpriteData ?? DefaultSpriteData;
+					Logger.Log($"Selected Honey Sprite data key is missing. Resetting selected Honey Sprite to the default.", LogLevel.Info);
+
+					ModEntry.Config.SpriteDataKey = DefaultSpriteDataKey;
+
+					RefreshHoneyData();
 				}
+
+				string spriteDataKey = ModEntry.Config.SpriteDataKey;
+
+				if (AllSpriteData.TryGetValue(spriteDataKey, out SpriteData? selectedSpriteData))
+				{
+					if (selectedSpriteData == null || String.IsNullOrWhiteSpace(selectedSpriteData.TextureName) || selectedSpriteData.SpriteIndex < 0)
+					{
+						Logger.Log($"Selected Honey Sprite data (entry key '{spriteDataKey}') is invalid. "
+							+ $"Resetting selected Honey Sprite to the default.", LogLevel.Info);
+						Logger.Log($"Selected Sprite Data: {selectedSpriteData}", Constants.BuildLogLevel);
+
+						ModEntry.Config.SpriteDataKey = DefaultSpriteDataKey;
+
+						RefreshHoneyData();
+
+						return DefaultSpriteData;
+					}
+
+					return selectedSpriteData;
+				}
+
+				Logger.Log($"{nameof(SelectedSpriteData)} - Honey Sprite data entry (key '{spriteDataKey}') not found. "
+					+ $"Returning default Honey Sprite data.", Constants.BuildLogLevel);
 
 				return DefaultSpriteData;
 			}
@@ -188,9 +215,10 @@ namespace ColoredHoneyLabels
 					{
 						// The normal case: Use the currently-selected option in our custom data asset to get the config values
 						// for rendering the honey object's sprite when it's a `ColoredObject`.
-						honeyDefinition.ColorOverlayFromNextIndex = SelectedSpriteData.ColorOverlayFromNextIndex;
-						honeyDefinition.Texture = SelectedSpriteData.TextureName;
-						honeyDefinition.SpriteIndex = SelectedSpriteData.SpriteIndex;
+						SpriteData selected = SelectedSpriteData;
+						honeyDefinition.ColorOverlayFromNextIndex = selected.ColorOverlayFromNextIndex;
+						honeyDefinition.Texture = selected.TextureName;
+						honeyDefinition.SpriteIndex = selected.SpriteIndex;
 					}
 
 				}, AssetEditPriority.Late);

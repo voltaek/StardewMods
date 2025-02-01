@@ -1,6 +1,6 @@
 {
-	"UniqueID": "ExampleUsername.ColoredHoneyLabelsExampleIntermediate",
-	"Name": "Colored Honey Labels - Example Intermediate Integration",
+	"UniqueID": "ExampleUsername.IntermediateExample",
+	"Name": "Colored Honey Labels - Intermediate Example Integration",
 	"Author": "ExampleUsername",
 	"Version": "0.0.1",
 	"Description": "Intermediate example mod for integrating your custom honey sprites with Colored Honey Labels.",
