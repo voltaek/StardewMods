@@ -32,36 +32,23 @@ namespace ColoredHoneyLabels
 			Logger = Monitor;
 			ModID = ModManifest.UniqueID;
 
-			// Read user's config
+			// Read user's config and schedule to register our mod and its config options
 			Config = Helper.ReadConfig<ModConfig>();
+			Config.ScheduleRegistration();
 
-			// Set up Generic Mod Config Menu integration
-			Helper.Events.GameLoop.GameLaunched += OnGameLaunched;
-
-			// Reset some things between save games
-			Helper.Events.GameLoop.ReturnedToTitle += OnReturnedToTitle;
-
-			// Add our custom asset and modify the honey object's definition
+			// Manage our custom asset and modifications to the honey object's definition
 			Helper.Events.Content.AssetRequested += AssetManager.OnAssetRequested;
 			Helper.Events.Content.AssetsInvalidated += AssetManager.OnAssetsInvalidated;
+			Helper.Events.Content.AssetReady += AssetManager.OnAssetReady;
+
+			// Reset some things between save games
+			Helper.Events.GameLoop.ReturnedToTitle += AssetManager.OnReturnedToTitle;
 
 			// Apply Harmony patches so that honey items are created as the `ColoredObject` type and get their color assigned to them.
 			Patches.ApplyPatches();
 
 			// Register our custom console commands
 			ConsoleCommands.AddCommands();
-		}
-
-		/// <inheritdoc cref="IGameLoopEvents.GameLaunched"/>
-		private void OnGameLaunched(object? sender, GameLaunchedEventArgs e)
-		{
-			Config.Register(Helper, ModManifest);
-		}
-
-		/// <inheritdoc cref="IGameLoopEvents.ReturnedToTitle"/>
-		private void OnReturnedToTitle(object? sender, ReturnedToTitleEventArgs e)
-		{
-			AssetManager.ResetUndoHoneyColors();
 		}
 	}
 }

@@ -1,5 +1,6 @@
 ﻿using ColoredHoneyLabels.Integrations;
 using ColoredHoneyLabels.Models;
+using StardewModdingAPI.Events;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -14,10 +15,48 @@ namespace ColoredHoneyLabels
 
 		public bool MoreLabelColorVariety { get; set; } = false;
 
-		internal void Register(IModHelper helper, IManifest manifest)
+		private const int TicksPastGameLaunchedContentPatcherEditsReady = 4;
+		private bool HasGameLaunched = false;
+		private int TickContentPatcherEditsReady = Int32.MaxValue;
+
+		/// <summary>Content Patcher isn't done applying edits until X ticks past GameLaunched.</summary>
+		private bool AreContentPatcherEditsReady => HasGameLaunched && Game1.ticks >= TickContentPatcherEditsReady;
+
+		/// <summary>Subscribe to event handlers that will register our mod and its config options with GMCM later.</summary>
+		internal void ScheduleRegistration()
+		{
+			// Set up Generic Mod Config Menu integration
+			ModEntry.Context.Helper.Events.GameLoop.GameLaunched += OnGameLaunched;
+			ModEntry.Context.Helper.Events.GameLoop.UpdateTicked += OnUpdateTicked;
+		}
+
+		/// <inheritdoc cref="IGameLoopEvents.GameLaunched"/>
+		private void OnGameLaunched(object? sender, GameLaunchedEventArgs e)
+		{
+			HasGameLaunched = true;
+			TickContentPatcherEditsReady = Game1.ticks + TicksPastGameLaunchedContentPatcherEditsReady;
+		}
+
+		/// <inheritdoc cref="IGameLoopEvents.UpdateTicked"/>
+		private void OnUpdateTicked(object? sender, UpdateTickedEventArgs e)
+		{
+			if (AreContentPatcherEditsReady)
+			{
+				// Remove this handler now that we've waited long enough.
+				ModEntry.Context.Helper.Events.GameLoop.UpdateTicked -= OnUpdateTicked;
+
+				// Register our mod and its config options with GMCM.
+				// We have to wait until GameLaunched + X ticks so that other mod's edits to our data asset will have already taken place.
+				// Otherwise our `allowedValues` for the 'Honey Sprite' option will only include our initially loaded defaults.
+				Register();
+			}
+		}
+
+		/// <summary>Register our mod and its config options with GMCM.</summary>
+		internal void Register()
 		{
 			// Get Generic Mod Config Menu's API (if it's installed)
-			IGenericModConfigMenuApi? configMenu = helper.ModRegistry.GetApi<IGenericModConfigMenuApi>("spacechase0.GenericModConfigMenu");
+			IGenericModConfigMenuApi? configMenu = ModEntry.Context.Helper.ModRegistry.GetApi<IGenericModConfigMenuApi>("spacechase0.GenericModConfigMenu");
 
 			if (configMenu is null)
 			{
@@ -26,15 +65,15 @@ namespace ColoredHoneyLabels
 
 			// Register mod
 			configMenu.Register(
-				mod: manifest,
+				mod: ModEntry.Context.ModManifest,
 				reset: () => ModEntry.Config = new(),
-				save: () => helper.WriteConfig(this)
+				save: () => ModEntry.Context.Helper.WriteConfig(this)
 			);
 
 			// Add each config value
 
 			configMenu.AddTextOption(
-				mod: manifest,
+				mod: ModEntry.Context.ModManifest,
 				name: () => "Honey Sprite",
 				tooltip: () => "Select the honey sprite to use from this or other mods' compatible options.",
 				getValue: () => SpriteDataKey ?? AssetManager.DefaultSpriteDataKey,
@@ -46,6 +85,10 @@ namespace ColoredHoneyLabels
 
 					AssetManager.RefreshHoneyData();
 				},
+				// NOTE - Since these values are only assigned once, AllSpritesData needs to already have any edits from other mods in it.
+				// If we register this immediately at GameLaunched then Content Patcher will only have done the initial load of our data asset,
+				// but not yet applied edits from other mods to it, yet, so we have to wait a minimum number of ticks past GameLaunched to register this option
+				// so that it gets the loaded data plus edited-in data assigned to it.
 				allowedValues: AssetManager.AllSpriteData.Keys.ToArray(),
 				formatAllowedValue: (value) => {
 					if (AssetManager.AllSpriteData.TryGetValue(value, out SpriteData? data))
@@ -58,7 +101,7 @@ namespace ColoredHoneyLabels
 			);
 
 			configMenu.AddBoolOption(
-				mod: manifest,
+				mod: ModEntry.Context.ModManifest,
 				name: () => "More Label Color Variety",
 				tooltip: () => "Enable this to slightly shift the label color of some honey types, resulting in a larger variety of label colors.",
 				getValue: () => MoreLabelColorVariety,

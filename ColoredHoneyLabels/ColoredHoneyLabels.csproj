@@ -13,4 +13,7 @@
     <EmbeddedResource Remove="ExampleIntegrationMods\**" />
     <None Remove="ExampleIntegrationMods\**" />
   </ItemGroup>
+  <ItemGroup>
+    <None Condition="$(Configuration) == 'Release'" Remove="assets\debug-sprites.png" />
+  </ItemGroup>
 </Project>

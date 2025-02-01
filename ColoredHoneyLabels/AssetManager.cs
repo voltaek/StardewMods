@@ -8,6 +8,7 @@ using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Text;
 using System.Threading.Tasks;
+using SpriteDataAsset = System.Collections.Generic.Dictionary<string, ColoredHoneyLabels.Models.SpriteData>;
 
 namespace ColoredHoneyLabels
 {
@@ -81,7 +82,7 @@ namespace ColoredHoneyLabels
 			get
 			{
 				spriteData ??= Game1.content.Load<SpriteDataAsset>(SpriteDataAssetName);
-				
+
 				return spriteData;
 			}
 		}
@@ -108,6 +109,16 @@ namespace ColoredHoneyLabels
 			if (e.NamesWithoutLocale.Any(an => an.IsEquivalentTo(SpriteDataAssetName)))
 			{
 				spriteData = null;
+			}
+		}
+
+		/// <inheritdoc cref="IContentEvents.AssetReady"/>
+		internal static void OnAssetReady(object? sender, AssetReadyEventArgs e)
+		{
+			// Reload our data asset after any edits were made to it by other mods
+			if (e.NameWithoutLocale.IsEquivalentTo(SpriteDataAssetName))
+			{
+				spriteData = Game1.content.Load<SpriteDataAsset>(SpriteDataAssetName);
 			}
 		}
 
@@ -184,6 +195,12 @@ namespace ColoredHoneyLabels
 
 				}, AssetEditPriority.Late);
 			}
+		}
+
+		/// <inheritdoc cref="IGameLoopEvents.ReturnedToTitle"/>
+		internal static void OnReturnedToTitle(object? sender, ReturnedToTitleEventArgs e)
+		{
+			ResetUndoHoneyColors();
 		}
 
 		/// <summary>
