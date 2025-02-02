@@ -21,5 +21,5 @@ You can either have it show you the flower that will flavor the honey or the hon
 | [Integration Docs](ColoredHoneyLabels/README.md)
 | [Example Integration Mods](ColoredHoneyLabels/ExampleIntegrationMods) )
 
-Colors honey bottle labels automatically by honey type.
-Other mods may easily provide their own custom honey and label sprites for users to choose from (see docs and example mod).
+Colors honey bottle labels, lids, etc. automatically by honey type.
+Other mods may easily provide their own custom honey sprites for users to choose from (see docs and example mod).

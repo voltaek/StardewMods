@@ -85,13 +85,13 @@ namespace ColoredHoneyLabels
 
 					AssetManager.RefreshHoneyData();
 				},
-				// NOTE - Since these values are only assigned once, AllSpritesData needs to already have any edits from other mods in it.
+				// NOTE - Since these values are only assigned once, our list of CP-loaded-and-edited sprite data needs to already have any edits from other mods in it.
 				// If we register this immediately at GameLaunched then Content Patcher will only have done the initial load of our data asset,
 				// but not yet applied edits from other mods to it, yet, so we have to wait a minimum number of ticks past GameLaunched to register this option
 				// so that it gets the loaded data plus edited-in data assigned to it.
-				allowedValues: AssetManager.AllSpriteData.Keys.ToArray(),
+				allowedValues: AssetManager.LoadedSpriteData.Keys.ToArray(),
 				formatAllowedValue: (value) => {
-					if (AssetManager.AllSpriteData.TryGetValue(value, out SpriteData? data))
+					if (AssetManager.LoadedSpriteData.TryGetValue(value, out SpriteData? data))
 					{
 						return data?.DisplayName ?? value;
 					}
