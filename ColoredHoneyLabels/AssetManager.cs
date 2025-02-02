@@ -1,11 +1,11 @@
 ﻿using ColoredHoneyLabels.Models;
+using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using StardewModdingAPI.Events;
 using StardewValley.GameData.Objects;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Runtime.CompilerServices;
 using System.Text;
 using System.Threading.Tasks;
 using SpriteDataAsset = System.Collections.Generic.Dictionary<string, ColoredHoneyLabels.Models.SpriteData>;
@@ -18,32 +18,26 @@ namespace ColoredHoneyLabels
 		private static IMonitor Logger => ModEntry.Logger;
 
 		private static bool HasCollectedDefaultHoneyObjectDataValues = false;
-		internal static bool DefaultHoneyColorOverlayFromNextIndex;
-		internal static string? DefaultHoneyTexture;
-		internal static int DefaultHoneySpriteIndex;
+		private static bool DefaultHoneyColorOverlayFromNextIndex;
+		private static string? DefaultHoneyTexture;
+		private static int DefaultHoneySpriteIndex;
 
-		internal static bool HasRestoredDefaultHoneyData = false;
+		private static bool HasRestoredDefaultHoneyData = false;
+		private static IRawTextureData? HoneyTexturePiecesRaw = null;
 
-		internal static string SpriteDataAssetName => $"Mods/{ModEntry.ModID}/{nameof(SpriteData)}";
+		public const string HoneyTextureBaseImagePath = "assets/honey-texture-base.png";
+		public const string HoneyTexturePiecesImagePath = "assets/honey-texture-pieces.png";
+		public const string DebugHoneyTextureImagePath = "assets/debug-honey-texture.png";
 
-		public const string DefaultSpritesImagePath = "assets/default-sprites.png";
-		public static string DefaultSpritesTextureName => $"Mods/{ModEntry.ModID}/DefaultSprites";
+		private static string SpriteDataAssetName => $"Mods/{ModEntry.ModID}/{nameof(SpriteData)}";
 
-		internal static string DefaultSpriteDataKey => $"{ModEntry.ModID}_default_with_colored_label";
-		private static readonly SpriteData DefaultSpriteData = new() {
-			DisplayName = "Default with Colored Label",
-			TextureName = DefaultSpritesTextureName,
+		internal static string DefaultSpriteDataKey => $"{ModEntry.ModID}_default_honey_full_label";
+		private static readonly SpriteData DefaultSpriteDataObject = new() {
+			DisplayName = "CHL - Full Label (default)",
+			TextureName = $"Mods/{ModEntry.ModID}/DefaultHoneyFullLabel",
 		};
 
-		public const string DebugSpritesImagePath = "assets/debug-sprites.png";
-		public static string DebugSpritesTextureName => $"Mods/{ModEntry.ModID}/DebugSprites";
-
-		internal static string DebugSpriteDataKey => $"{ModEntry.ModID}_debug";
-		private static readonly SpriteData DebugSpriteData = new()
-		{
-			DisplayName = "DEBUG",
-			TextureName = DebugSpritesTextureName,
-		};
+		private static string DebugTextureName => $"Mods/{ModEntry.ModID}/DebugHoney";
 
 		#if DEBUG
 			private const bool AddDebugSpritesToAsset = true;
@@ -51,28 +45,71 @@ namespace ColoredHoneyLabels
 			private const bool AddDebugSpritesToAsset = false;
 		#endif
 
-		/// <summary>
-		/// Our custom data structure with our default entry (or entries when in debug) already added.
-		/// </summary>
-		private static SpriteDataAsset DefaultSpriteDataAsset
+		private static SpriteDataAsset? builtIns = null;
+
+		/// <summary>All of our built-in sprite data in a SpriteDataAsset AKA Dictionary.</summary>
+		private static SpriteDataAsset BuiltInSpriteDataAsset
 		{
 			get
 			{
-				SpriteDataAsset asset = new() {
-					{ DefaultSpriteDataKey, DefaultSpriteData },
+				if (builtIns != null)
+				{
+					return builtIns;
+				}
+
+				SpriteDataAsset asset = new()
+				{
+					{
+						DefaultSpriteDataKey,
+						DefaultSpriteDataObject
+					},
+					{
+						$"{ModEntry.ModID}_default_honey_mini_label",
+						new() {
+							DisplayName = "CHL - Mini Label",
+							TextureName = $"Mods/{ModEntry.ModID}/DefaultHoneyMiniLabel",
+						}
+					},
+					{
+						$"{ModEntry.ModID}_default_honey_full_label_with_lid",
+						new() {
+							DisplayName = "CHL - Full Label + Lid",
+							TextureName = $"Mods/{ModEntry.ModID}/DefaultHoneyFullLabelWithLid",
+						}
+					},
+					{
+						$"{ModEntry.ModID}_default_honey_mini_label_with_lid",
+						new() {
+							DisplayName = "CHL - Mini Label + Lid",
+							TextureName = $"Mods/{ModEntry.ModID}/DefaultHoneyMiniLabelWithLid",
+						}
+					},
+					{
+						$"{ModEntry.ModID}_default_honey_lid_only",
+						new() {
+							DisplayName = "CHL - Lid Only",
+							TextureName = $"Mods/{ModEntry.ModID}/DefaultHoneyLidOnly",
+						}
+					},
 				};
 
 				if (AddDebugSpritesToAsset)
 				{
 					// Only add the debug option in debug builds
-					asset.Add(DebugSpriteDataKey, DebugSpriteData);
+					asset.Add($"{ModEntry.ModID}_debug", new()
+					{
+						DisplayName = "Debug",
+						TextureName = DebugTextureName,
+					});
 				}
 
-				return asset;
+				builtIns = asset;
+
+				return builtIns;
 			}
 		}
 
-		private static SpriteDataAsset? spriteData = null;
+		private static SpriteDataAsset? allSpriteData = null;
 
 		/// <summary>
 		/// The data asset of all sprite data options.
@@ -81,9 +118,9 @@ namespace ColoredHoneyLabels
 		{
 			get
 			{
-				spriteData ??= Game1.content.Load<SpriteDataAsset>(SpriteDataAssetName);
+				allSpriteData ??= Game1.content.Load<SpriteDataAsset>(SpriteDataAssetName);
 
-				return spriteData;
+				return allSpriteData;
 			}
 		}
 
@@ -112,17 +149,21 @@ namespace ColoredHoneyLabels
 
 						ModEntry.Config.SpriteDataKey = DefaultSpriteDataKey;
 
-						return DefaultSpriteData;
+						return DefaultSpriteDataObject;
 					}
 
 					return selectedSpriteData;
 				}
 
-				Logger.Log($"Selected 'Honey Sprite' data entry not found for config option key '{spriteDataKey}'. Using default honey sprite.", Constants.BuildLogLevel);
+				// Check if all entries from integration mods have been added before changing their config option.
+				if (ModEntry.Config.AreContentPatcherEditsReady)
+				{
+					Logger.Log($"Selected 'Honey Sprite' data entry not found for config option key '{spriteDataKey}'. Using default honey sprite.", Constants.BuildLogLevel);
 
-				ModEntry.Config.SpriteDataKey = DefaultSpriteDataKey;
+					ModEntry.Config.SpriteDataKey = DefaultSpriteDataKey;
+				}
 
-				return DefaultSpriteData;
+				return DefaultSpriteDataObject;
 			}
 		}
 
@@ -131,7 +172,7 @@ namespace ColoredHoneyLabels
 		{
 			if (e.NamesWithoutLocale.Any(an => an.IsEquivalentTo(SpriteDataAssetName)))
 			{
-				spriteData = null;
+				allSpriteData = null;
 			}
 		}
 
@@ -141,7 +182,7 @@ namespace ColoredHoneyLabels
 			// Reload our data asset after any edits were made to it by other mods
 			if (e.NameWithoutLocale.IsEquivalentTo(SpriteDataAssetName))
 			{
-				spriteData = Game1.content.Load<SpriteDataAsset>(SpriteDataAssetName);
+				allSpriteData = Game1.content.Load<SpriteDataAsset>(SpriteDataAssetName);
 			}
 		}
 
@@ -151,19 +192,75 @@ namespace ColoredHoneyLabels
 			// Load our custom asset to hold sprite data, with default data in it already
 			if (e.NameWithoutLocale.IsEquivalentTo(SpriteDataAssetName))
 			{
-				e.LoadFrom(() => DefaultSpriteDataAsset, AssetLoadPriority.Exclusive);
-			}
+				// Don't pass our actual dictionary, otherwise integration entries will get mixed in with our built-in ones.
+				e.LoadFrom(() => new SpriteDataAsset(BuiltInSpriteDataAsset), AssetLoadPriority.Exclusive);
 
-			// Load our default sprites into a texture for later
-			if (e.NameWithoutLocale.IsEquivalentTo(DefaultSpritesTextureName))
-			{
-				e.LoadFromModFile<Texture2D>(DefaultSpritesImagePath, AssetLoadPriority.Exclusive);
+				return;
 			}
 
 			// Load our debug sprites for testing
-			if (e.NameWithoutLocale.IsEquivalentTo(DebugSpritesTextureName))
+			if (e.NameWithoutLocale.IsEquivalentTo(DebugTextureName))
 			{
-				e.LoadFromModFile<Texture2D>(DebugSpritesImagePath, AssetLoadPriority.Exclusive);
+				e.LoadFromModFile<Texture2D>(DebugHoneyTextureImagePath, AssetLoadPriority.Exclusive);
+
+				// If we don't return early then we'll try to also load the Debug texture from the list of built-ins.
+				return;
+			}
+
+			// Check if the asset is one of our built-in honey textures
+			List<SpriteData> matchingBuiltInDataAssets = BuiltInSpriteDataAsset
+				.Where(x => e.NameWithoutLocale.IsEquivalentTo(x.Value.TextureName))
+				.Select(y => y.Value)
+				.ToList();
+
+			foreach (SpriteData spriteData in matchingBuiltInDataAssets)
+			{
+				// If it is, load the base of the texture from our PNG
+				e.LoadFromModFile<Texture2D>(HoneyTextureBaseImagePath, AssetLoadPriority.Exclusive);
+
+				HoneyTexturePiecesRaw ??= ModEntry.Context.Helper.ModContent.Load<IRawTextureData>(HoneyTexturePiecesImagePath);
+
+				// Then edit the proper sprite pieces into the texture from our pieces PNG
+				e.Edit(asset => {
+					IAssetDataForImage editor = asset.AsImage();
+
+					string textureName = spriteData.TextureName ?? String.Empty;
+					bool hasFullLabel = textureName.Contains("FullLabel");
+					bool hasMiniLabel = textureName.Contains("MiniLabel");
+					bool hasLid = textureName.Contains("Lid");
+
+					if (!(hasFullLabel || hasMiniLabel || hasLid))
+					{
+						Logger.Log($"Built-in sprite data texture name {(spriteData.TextureName == null ? "`null`" : $"'{spriteData.TextureName}'")} "
+							+ $"had no label indicators in it. Defaulting to full label.", LogLevel.Info);
+
+						hasFullLabel = true;
+					}
+
+					int spriteSize = 16;
+					Rectangle labelSlot = new() { X = 16, Y = 0, Width = spriteSize, Height = spriteSize };
+
+					if (hasFullLabel || hasMiniLabel)
+					{
+						// Patch the bottle overlay for under the mini label onto our honey bottle sprite
+						editor.PatchImage(HoneyTexturePiecesRaw, new() { X = 0, Y = 0, Width = spriteSize, Height = spriteSize }, null, PatchMode.Overlay);
+
+						// Patch the inner/mini label into the mask slot
+						editor.PatchImage(HoneyTexturePiecesRaw, new() { X = 16, Y = 0, Width = spriteSize, Height = spriteSize }, labelSlot, PatchMode.Overlay);
+					}
+
+					if (hasFullLabel)
+					{
+						// Patch the outer label into the mask slot
+						editor.PatchImage(HoneyTexturePiecesRaw, new() { X = 32, Y = 0, Width = spriteSize, Height = spriteSize }, labelSlot, PatchMode.Overlay);
+					}
+
+					if (hasLid)
+					{
+						// Patch the lid into the mask slot
+						editor.PatchImage(HoneyTexturePiecesRaw, new() { X = 48, Y = 0, Width = spriteSize, Height = spriteSize }, labelSlot, PatchMode.Overlay);
+					}
+				});
 			}
 
 			// When Objects data is loaded, make our edits to the Honey object definition.

@@ -20,7 +20,7 @@ namespace ColoredHoneyLabels
 		private int TickContentPatcherEditsReady = Int32.MaxValue;
 
 		/// <summary>Content Patcher isn't done applying edits until X ticks past GameLaunched.</summary>
-		private bool AreContentPatcherEditsReady => HasGameLaunched && Game1.ticks >= TickContentPatcherEditsReady;
+		internal bool AreContentPatcherEditsReady => HasGameLaunched && Game1.ticks >= TickContentPatcherEditsReady;
 
 		/// <summary>Subscribe to event handlers that will register our mod and its config options with GMCM later.</summary>
 		internal void ScheduleRegistration()

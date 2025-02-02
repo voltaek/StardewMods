@@ -46,9 +46,10 @@ then you should include something in it to identify it as coming from your mod.
 * `DisplayName` - A short description of your honey sprite. If your sprite is to add compatibility with another/your mod, you should ideally include
 the mod's name in this. This text must fit in the 'Honey Sprite' config option list, so keep it as short as possible.
 
-* `TextureName` - The name of the texture asset your sprite or sprites are loaded into. This must have your honey sprite in it and (unless you're
-setting `ColorOverlayFromNextIndex` \[see below\] to `false`), then immediately to the right of your honey sprite (as in, in the next 16px x 16px sprite slot)
-must be your label tint mask sprite. See [the default sprites PNG](assets/default-sprites.png) for an example of this layout, or the Simple example mod's PNG.
+* `TextureName` - The name of the texture asset your sprite or sprites are loaded into.
+Ensure your texture names is unique by starting it with either `Mods/{{ModId}}/` or `{{ModId}}/`.
+The texture must have your honey sprite in it and (unless you're setting `ColorOverlayFromNextIndex` \[see below\] to `false`), and then immediately to the right
+of your honey sprite (as in, in the next 16px x 16px sprite slot) must be your label tint mask sprite. See the Simple example mod's PNG for reference.
 
 #### Optional Fields
 
@@ -73,7 +74,7 @@ and then overlaid on top of the object sprite. In this case, we tint the label s
 	},
 }
 ```
-*This is an excerpt from the Simple example mod's `content.json` file in the [ExampleIntegrationMods](ExampleIntegrationMods) directory)*
+*This is an excerpt from the Simple example mod's `content.json` file in the [ExampleIntegrationMods](ExampleIntegrationMods) directory*
 
 See the [EditData] documentation in the [Content Patcher Author Guide] for more information on how to construct this JSON.
 
