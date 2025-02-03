@@ -10,10 +10,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 - 4 new honey sprite options now built in, using the default honey sprite. In addition to the existing "Full Label" default option, there is now:
-	- **Mini Label** Just the center 4 pixels of the label are colored to replace the default yellow and orange pixels.
-	- **Full Label + Lid** The fully-colored label (same as the default option), plus the lid is colored, too!
-	- **Mini Label + Lid** Same as the 'Mini Label' option, plus the lid is colored, too!
-	- **Lid Only** The label stays completely standard, but the lid is colored.
+	- **Mini Label** - Just the center 4 pixels of the label are colored to replace the default yellow and orange pixels.
+	- **Full Label + Lid** - The fully-colored label (same as the default option), plus the lid is colored, too!
+	- **Mini Label + Lid** - Same as the 'Mini Label' option, plus the lid is colored, too!
+	- **Lid Only** - The label stays completely standard, but the lid is colored.
 - Users can now choose the honey sprite to use from a new 'Honey Sprite' GMCM config option list.
 - New 'Intermediate' example mod to demonstrate the flexibility of the new integration method.
 
