@@ -2,7 +2,7 @@
 
 ## Integration Documentation
 
-If you'd like to add your own honey with colored label/lid/etc. sprite into this mod's "Honey Sprite" config option list, this is the documentation for you.
+If you'd like to add your own honey with colored label/lid/etc. sprite into this mod's *Honey Sprite* config option list, this is the documentation for you.
 
 At a high level, you just need to edit an entry into this mod's custom data asset dictionary to tell it about the texture that has your sprites loaded into it.
 The entry will also include some information for describing your sprites to users and for the mod to work with the texture.
@@ -10,7 +10,7 @@ If your sprites aren't already loaded into a texture, you'll need to load them i
 
 It will probably make this documentation easier to follow if you reference the example mods I've created.
 They demonstrate both simple and intermediate integrations, and are full of comments in the JSON describing what is going on and why.
-They're located in the [ExampleIntegrationMods](ExampleIntegrationMods) folder. I'll mostly be describing the 'Simple' variant in this documentation.
+They're located in the [ExampleIntegrationMods](ExampleIntegrationMods) folder. I'll mostly be describing the *Simple* variant in this documentation.
 
 The texture asset you use in the entry must be a minimum of 32px x 16px (unless you're messing with `ColorOverlayFromNextIndex` \[see below\],
 in which case 16px x 16px) so that your honey sprite and label sprite can both fit in it, and should have a transparent background.
@@ -32,26 +32,25 @@ For further reading on loading and editing assets, or just using Content Patcher
 
 `Mods/voltaek.ColoredHoneyLabels/SpriteData`
 
-This is a dictionary data asset with string keys and custom objects (the contents of which are defined in 'Entry Data' below) as values.
+This is a dictionary data asset with string keys and custom objects (the contents of which are defined in *Entry Data* below) as values.
 
 ### Entry Key
 
-The unique key you use for your data entry into the dictionary will be stored in the user's `config.json` as the value behind the 'Honey Sprite' option.
-Your key must be unique (easily accomplished by including `{{ModId}}` in it, which automatically adds your mod's unique ID) and should ideally also include
-similar descriptors to your display name. Something like `{{ModId}}_honey_with_striped_label`, for example. If you don't use `{{ModId}}` for some reason,
-then you should include something in it to identify it as coming from your mod.
+The entry key is a [unique string ID] for your data entry into the dictionary. Your key must be prefixed with your unique mod ID like `{{ModId}}_`.
+It will be stored in the user's `config.json` as the value behind the *Honey Sprite* option if they select your sprite.
+It should ideally include similar descriptors to the display name in your entry, such as `{{ModId}}_striped_label`, for example.
 
 ### Entry Data
 
 #### Required Fields
 
-* `DisplayName` - A short description of your honey sprite. If your sprite is to add compatibility with another/your mod, you should ideally include
-the mod's name or initials (to save space) in this. This text must fit in the 'Honey Sprite' config option list, so keep it as short as possible.
+* `DisplayName` - A short description of your honey sprite to show in the *Honey Sprite* config option list. Keep it as short as possible so it fits in the list.
+If your sprite is to add compatibility with another/your mod, you should ideally include the mod's name or its initials (to save space) in it.
 
 * `TextureName` - The name of the texture asset your sprite or sprites are loaded into.
 Standard practice to ensure your texture name is unique is to start it with either `Mods/{{ModId}}/` or `{{ModId}}/`.
 The texture must have your honey sprite in it (unless you're setting `ColorOverlayFromNextIndex` \[see below\] to `false`) and then immediately to the right
-of your honey sprite (as in, in the next 16px x 16px sprite slot) must be your tint mask sprite. See the Simple example mod's PNG for reference.
+of your honey sprite (as in, in the next 16px x 16px sprite slot) must be your tint mask sprite. See the *Simple* example mod's PNG for reference.
 
 #### Optional Fields
 
@@ -87,4 +86,5 @@ See the [EditData] documentation in the [Content Patcher Author Guide] for more 
 [Load Action]: https://github.com/Pathoschild/StardewMods/blob/stable/ContentPatcher/docs/author-guide/action-load.md
 [EditData]: https://github.com/Pathoschild/StardewMods/blob/stable/ContentPatcher/docs/author-guide/action-editdata.md#usage
 [Content Patcher Author Guide]: https://github.com/Pathoschild/StardewMods/blob/stable/ContentPatcher/docs/author-guide/action-load.md
+[unique string ID]: https://stardewvalleywiki.com/Modding:Common_data_field_types#Unique_string_ID
 [unpacking the game's content files]: https://stardewvalleywiki.com/Modding:Editing_XNB_files#Unpack_game_files
