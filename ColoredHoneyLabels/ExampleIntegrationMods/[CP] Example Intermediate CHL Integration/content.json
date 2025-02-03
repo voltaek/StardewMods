@@ -1,0 +1,60 @@
+{
+	"Format": "2.5.0",
+	"Changes": [
+		// First, load your base PNG into a new custom texture asset. This should be 32px x 16px.
+		// In this case, this PNG only has the label mask on the right half of it; we'll load the honey sprite into the left half below.
+		{
+			// Ref: https://github.com/Pathoschild/StardewMods/blob/develop/ContentPatcher/docs/author-guide/action-load.md
+			"Action": "Load",
+			"Target": "Mods/{{ModId}}/HoneyAndLabelTexture",
+			"LogName": "Load base PNG into texture",
+			
+			// Replace this with the filename of your base PNG file that you place in your mod's "assets" folder.
+			"FromFile": "assets/intermediate-example_base-with-just-label-mask.png",
+		},
+		// Then, edit your existing honey sprite - which you already have in another PNG in your mod's files - into the texture you loaded.
+		// This way you only need one copy of the honey sprite in your mod files.
+		{
+			"Action": "EditImage",
+			"Target": "Mods/{{ModId}}/HoneyAndLabelTexture",
+			"LogName": "Edit honey PNG into texture",
+			"FromFile": "assets/intermediate-example_separate-honey.png",
+			"ToArea": { "X": 0, "Y": 0, "Width": 16, "Height": 16 },
+			
+			// If you keep this as 'Overlay' rather than the default 'Replace', you could have something behind the honey sprite
+			// for it to end up overlaid on top of, if you wanted.
+			"PatchMode": "Overlay",
+		},
+		// Also, you could apply an edit to your honey sprite you copied into the texture, such as overlaying a part of it with some different colors
+		// so that when the colored label is placed overtop of it by the game, the colors interact in a more desirable manner.
+		// Example: Overlaying some white pixels onto a portion of your honey sprite in the texture so that a portion of your label sprite
+		// which has partial transparency can be lightened in color by the underlying white you've added there.
+		{
+			"Action": "EditImage",
+			"Target": "Mods/{{ModId}}/HoneyAndLabelTexture",
+			"LogName": "Edit overlay onto honey in texture",
+			"FromFile": "assets/intermediate-example_honey-overlay-edit.png",
+			"ToArea": { "X": 0, "Y": 0, "Width": 16, "Height": 16 },
+			
+			// This is what allows us to "edit" on top of the honey sprite without replacing the rest of the honey sprite.
+			"PatchMode": "Overlay",
+		},
+		// Finally, edit a new entry into the CHL's sprite data dictionary.
+		{
+			"Action": "EditData",
+			"Target": "Mods/voltaek.ColoredHoneyLabels/SpriteData",
+			"LogName": "Edit entry into CHL sprite data dictionary",
+			"Entries": {
+				// The dictionary key you put here will end up stored into user's CHL config files, so please make it both readable and unique.
+				// The ideal way to make it unique is to include your mod's unique ID in it, which has the benefit of identifying its origins.
+				"{{ModId}}_intermediate_example_sprites": {
+					// A short, descriptive name; should probably include your mod's name in it.
+					// This text must fit in the 'Honey Sprite' config option list, so keep it as short as possible.
+					"DisplayName": "Intermediate Example Sprites",
+					// The texture target you loaded your texture into above in the "Load" step.
+					"TextureName": "Mods/{{ModId}}/HoneyAndLabelTexture",
+				}
+			},
+		}
+	]
+}
