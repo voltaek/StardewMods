@@ -1,4 +1,5 @@
-﻿using StardewModdingAPI.Events;
+﻿using Microsoft.Xna.Framework;
+using StardewModdingAPI.Events;
 using StardewValley.Extensions;
 using StardewValley.Internal;
 using StardewValley.Objects;
@@ -25,103 +26,123 @@ namespace ColoredHoneyLabels
 		private static void OnSaveLoaded(object? sender, SaveLoadedEventArgs e)
 		{
 			Logger.VerboseLog($"{Utility.VerboseStart} {nameof(OnSaveLoaded)} - Started");
-			ConvertAllHoneyToColored();
+
+			PrepareHoneyForUse();
+
 			Logger.VerboseLog($"{Utility.VerboseStart} {nameof(OnSaveLoaded)} - Ended");
 		}
 
 		private static void OnSaving(object? sender, SavingEventArgs e)
 		{
 			Logger.VerboseLog($"{Utility.VerboseStart} {nameof(OnSaving)} - Started");
-			ConvertAllHoneyToStandard();
+
+			PrepareHoneyForStorage();
+
 			Logger.VerboseLog($"{Utility.VerboseStart} {nameof(OnSaving)} - Ended");
 		}
 
 		private static void OnSaved(object? sender, SavedEventArgs e)
 		{
 			Logger.VerboseLog($"{Utility.VerboseStart} {nameof(OnSaved)} - Started");
-			ConvertAllHoneyToColored();
+
+			PrepareHoneyForUse();
+
 			Logger.VerboseLog($"{Utility.VerboseStart} {nameof(OnSaved)} - Ended");
 		}
 
-		private static void ConvertAllHoneyToColored()
+		private static void PrepareHoneyForUse()
 		{
-			int convertedToColoredCount = 0;
-
 			try
 			{
-				// Go through all items in the game world to update the standard honey objects to colored ones
+				// Go through all items in the game world to update both standard and colored honey objects to ready them for use in the world
 				StardewValley.Utility.ForEachItemContext(delegate (in ForEachItemContext context)
 				{
-					if (context.Item.QualifiedItemId != Constants.HoneyObjectQualifiedIndentifier || context.Item is ColoredObject
-						|| !context.Item.HasTypeObject() || context.Item is not SObject honeyObject)
+					if (context.Item.QualifiedItemId != Constants.HoneyObjectQualifiedIndentifier || context.Item is not SObject honeyObject)
 					{
 						return true;
 					}
 
-					ColoredObject? coloredHoneyObject = Utility.GetColoredHoneyObjectFromHoneyObject(honeyObject);
+					// Change all existing honey objects to use the current sprite index
+					honeyObject.ParentSheetIndex = AssetManager.SelectedSpriteData.SpriteIndex;
 
-					if (coloredHoneyObject == null)
+					if (honeyObject is ColoredObject coloredItem)
 					{
-						return true;
+						// Change all existing colored honey objects to use the current overlay value
+						coloredItem.ColorSameIndexAsParentSheetIndex = !AssetManager.SelectedSpriteData.ColorOverlayFromNextIndex;
+
+						Color? storedColor = coloredItem.TryGetStoredLabelColor();
+
+						if (storedColor.HasValue)
+						{
+							// If the existing colored honey object has its label color stored on it, then restore its color to that
+							coloredItem.color.Value = storedColor.Value;
+						}
 					}
+					else
+					{
+						// Attempt to convert any non-colored honey to be colored
+						ColoredObject? coloredHoneyObject = Utility.GetColoredHoneyObjectFromHoneyObject(honeyObject);
 
-					// Set the object's sprite index manually to avoid us having to invalidate the cached object data definition.
-					coloredHoneyObject.ParentSheetIndex = AssetManager.SelectedSpriteData.SpriteIndex;
-
-					// Replace the `Object` with our `ColoredObject` recreated from it
-					context.ReplaceItemWith(coloredHoneyObject);
-					convertedToColoredCount += 1;
+						if (coloredHoneyObject != null)
+						{
+							// Replace the `Object` with our `ColoredObject` recreated from it
+							context.ReplaceItemWith(coloredHoneyObject);
+						}
+					}
 
 					return true;
 				});
-
-				Logger.VerboseLog($"Replaced {convertedToColoredCount} standard Honey items with colored ones.");
 			}
 			catch (Exception ex)
 			{
-				Logger.Log($"An error occurred while updating Honey objects in {nameof(ConvertAllHoneyToStandard)}.\nException Details:\n{ex}", LogLevel.Info);
+				Logger.Log($"An error occurred while updating Honey objects in {nameof(PrepareHoneyForUse)}.\nException Details:\n{ex}", LogLevel.Info);
 			}
 		}
 
-		private static void ConvertAllHoneyToStandard()
+		private static void PrepareHoneyForStorage()
 		{
-			int convertedToStandardCount = 0;
-
 			try
 			{
-				// Go through all items in the game world to update the colored honey objects back to standard ones
+				// Go through all items in the game world to update both standard and colored honey objects to ready them for storage/saving
 				StardewValley.Utility.ForEachItemContext(delegate (in ForEachItemContext context)
 				{
-					if (context.Item.QualifiedItemId != Constants.HoneyObjectQualifiedIndentifier || context.Item is not ColoredObject coloredItem)
+					if (context.Item.QualifiedItemId != Constants.HoneyObjectQualifiedIndentifier || context.Item is not SObject honeyObject)
 					{
 						return true;
 					}
 
-					// Change our `ColoredObject` back to an `Object`, as it is in vanilla.
-					SObject honeyObject = Utility.GetObjectFromColoredObject(coloredItem);
-
-					// Set the object's sprite index manually to avoid us having to invalidate the cached object data definition.
 					if (AssetManager.DefaultHoneySpriteIndex.HasValue)
 					{
+						// Set all honey objects to have the default sprite index so the save file will have it set to that.
+						// This allows seamless uninstalls since honey objects won't have incorrect sprite indexes "cached" on them.
 						honeyObject.ParentSheetIndex = AssetManager.DefaultHoneySpriteIndex.Value;
 					}
 					else
 					{
-						Logger.LogOnce($"Unable to restore default Honey sprite index in {nameof(ConvertAllHoneyToStandard)}", LogLevel.Info);
+						Logger.LogOnce($"Unable to restore default Honey sprite index in {nameof(PrepareHoneyForStorage)}", LogLevel.Info);
 					}
 
-					// Replace the `ColoredObject` with our `Object` recreated from it
-					context.ReplaceItemWith(honeyObject);
-					convertedToStandardCount += 1;
+					if (honeyObject is ColoredObject coloredItem)
+					{
+						if (!coloredItem.HasStoredLabelColor())
+						{
+							// Store the honey's current color if we haven't already
+							coloredItem.StoreLabelColor(coloredItem.color.Value);
+						}
+
+						// Set the honey's color to white and set the color/tint to overlay on the honey sprite itself, rather than the next index's sprite.
+						// Doing this means even though this honey is a `ColoredObject`, the tint will have essentially no affect.
+						// This will allow all honey objects - "colored" or not - to appear the same as each other if this mod gets uninstalled.
+						coloredItem.color.Value = Color.White;
+						coloredItem.ColorSameIndexAsParentSheetIndex = true;
+					}
 
 					return true;
 				});
-
-				Logger.VerboseLog($"Replaced {convertedToStandardCount} colored Honey items with standard ones.");
 			}
 			catch (Exception ex)
 			{
-				Logger.Log($"An error occurred while updating Honey objects in {nameof(ConvertAllHoneyToStandard)}.\nException Details:\n{ex}", LogLevel.Info);
+				Logger.Log($"An error occurred while updating Honey objects in {nameof(PrepareHoneyForStorage)}.\nException Details:\n{ex}", LogLevel.Info);
 			}
 		}
 	}

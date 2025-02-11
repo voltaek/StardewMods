@@ -51,7 +51,7 @@ namespace ColoredHoneyLabels
 					return;
 				}
 
-				// Whenever we calc a color we should notate the outcome so we can avoid recalcs later.
+				// Whenever we calc a color we should store the outcome so we can avoid recalcs later.
 				coloredHoney.StoreLabelColor(labelColor);
 
 				__result = coloredHoney;

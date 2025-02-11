@@ -100,7 +100,7 @@ namespace ColoredHoneyLabels
 					Color freshColor = GetLabelColorFromHoneyObject(coloredItem);
 					coloredItem.color.Value = freshColor;
 
-					// Whenever we calc a color we should notate the outcome so we can avoid recalcs later.
+					// Whenever we calc a color we should store the outcome so we can avoid recalcs later.
 					coloredItem.StoreLabelColor(freshColor);
 
 					refreshedLabelColorCount += 1;
@@ -203,7 +203,7 @@ namespace ColoredHoneyLabels
 				return null;
 			}
 
-			// Whenever we calc a color we should notate the outcome so we can avoid recalcs later.
+			// Whenever we calc a color we should store the outcome so we can avoid recalcs later.
 			coloredHoney.StoreLabelColor(labelColor);
 
 			return coloredHoney;
@@ -215,6 +215,21 @@ namespace ColoredHoneyLabels
 			{
 				obj.modData[Constants.ModDataKey_LabelColorPackedValue] = labelColor.PackedValue.ToString();
 			}
+		}
+
+		internal static bool HasStoredLabelColor(this SObject obj)
+		{
+			return obj.modData.ContainsKey(Constants.ModDataKey_LabelColorPackedValue);
+		}
+
+		internal static Color? TryGetStoredLabelColor(this SObject obj)
+		{
+			if (obj.HasStoredLabelColor() && UInt32.TryParse(obj.modData[Constants.ModDataKey_LabelColorPackedValue], out UInt32 packedValue))
+			{
+				return new(packedValue);
+			}
+
+			return null;
 		}
 	}
 }
