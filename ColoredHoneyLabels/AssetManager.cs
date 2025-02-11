@@ -19,12 +19,7 @@ namespace ColoredHoneyLabels
 		/// <summary>Shorthand for the main logger instance.</summary>
 		private static IMonitor Logger => ModEntry.Logger;
 
-		private static bool HasCollectedDefaultHoneyObjectDataValues = false;
-		private static bool DefaultHoneyColorOverlayFromNextIndex;
-		private static string? DefaultHoneyTexture;
-		private static int DefaultHoneySpriteIndex;
-
-		private static bool HasRestoredDefaultHoneyData = false;
+		internal static int? DefaultHoneySpriteIndex { get; private set; }
 
 		private static string SpriteDataAssetName => $"Mods/{ModEntry.ModID}/SpriteData";
 		
@@ -127,7 +122,7 @@ namespace ColoredHoneyLabels
 		/// <summary>
 		/// Returns the currently-selected (or default if none are) sprite data.
 		/// </summary>
-		private static SpriteData SelectedSpriteData
+		internal static SpriteData SelectedSpriteData
 		{
 			get
 			{
@@ -165,6 +160,14 @@ namespace ColoredHoneyLabels
 
 				return DefaultSpriteDataObject;
 			}
+		}
+
+		internal static void RegisterEvents()
+		{
+			// Manage our custom asset and modifications to the honey object's definition
+			ModEntry.Context.Helper.Events.Content.AssetRequested += OnAssetRequested;
+			ModEntry.Context.Helper.Events.Content.AssetsInvalidated += OnAssetsInvalidated;
+			ModEntry.Context.Helper.Events.Content.AssetReady += OnAssetReady;
 		}
 
 		/// <inheritdoc cref="IContentEvents.AssetsInvalidated"/>
@@ -221,49 +224,21 @@ namespace ColoredHoneyLabels
 						return;
 					}
 
-					// Hold onto these in case we need to restore them, such as if the Undo Honey Colors command is run.
-					if (!HasCollectedDefaultHoneyObjectDataValues)
+					// Hold onto this so we can restore it before saving, so only default/vanilla data is saved.
+					if (!DefaultHoneySpriteIndex.HasValue)
 					{
-						DefaultHoneyColorOverlayFromNextIndex = honeyDefinition.ColorOverlayFromNextIndex;
-						DefaultHoneyTexture = honeyDefinition.Texture;
 						DefaultHoneySpriteIndex = honeyDefinition.SpriteIndex;
-
-						HasCollectedDefaultHoneyObjectDataValues = true;
 					}
 
-					// If the user has run the Undo Honey Colors command, then restore the honey object data default values.
-					if (ConsoleCommands.HasRunUndoHoneyColorsCommand)
-					{
-						// Only restore it once.
-						if (!HasRestoredDefaultHoneyData)
-						{
-							honeyDefinition.ColorOverlayFromNextIndex = DefaultHoneyColorOverlayFromNextIndex;
-							honeyDefinition.Texture = DefaultHoneyTexture;
-							honeyDefinition.SpriteIndex = DefaultHoneySpriteIndex;
-
-							HasRestoredDefaultHoneyData = true;
-
-							Logger.Log($"Restored default Honey object data definition values", LogLevel.Info);
-						}
-					}
-					else
-					{
-						// The normal case: Use the currently-selected option in our custom data asset to get the config values
-						// for rendering the honey object's sprite when it's a `ColoredObject`.
-						SpriteData selected = SelectedSpriteData;
-						honeyDefinition.ColorOverlayFromNextIndex = selected.ColorOverlayFromNextIndex;
-						honeyDefinition.Texture = selected.TextureName;
-						honeyDefinition.SpriteIndex = selected.SpriteIndex;
-					}
+					// Use the currently-selected option in our custom data asset to get the config values
+					// for rendering the honey object's sprite when it's a `ColoredObject`.
+					SpriteData selected = SelectedSpriteData;
+					honeyDefinition.ColorOverlayFromNextIndex = selected.ColorOverlayFromNextIndex;
+					honeyDefinition.Texture = selected.TextureName;
+					honeyDefinition.SpriteIndex = selected.SpriteIndex;
 
 				}, AssetEditPriority.Late);
 			}
-		}
-
-		/// <inheritdoc cref="IGameLoopEvents.ReturnedToTitle"/>
-		internal static void OnReturnedToTitle(object? sender, ReturnedToTitleEventArgs e)
-		{
-			ResetUndoHoneyColors();
 		}
 
 		/// <summary>
@@ -272,21 +247,6 @@ namespace ColoredHoneyLabels
 		internal static void RefreshHoneyData()
 		{
 			ModEntry.Context.Helper.GameContent.InvalidateCache(Constants.HoneyObjectParentAssetName);
-		}
-
-		/// <summary>
-		/// Reset tracked values that were changed when the user ran the console command to undo all colored honey objects.
-		/// </summary>
-		internal static void ResetUndoHoneyColors()
-		{
-			ConsoleCommands.ResetUndoHoneyColors();
-
-			if (HasRestoredDefaultHoneyData)
-			{
-				HasRestoredDefaultHoneyData = false;
-
-				RefreshHoneyData();
-			}
 		}
 	}
 }

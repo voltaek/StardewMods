@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Microsoft.Xna.Framework;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -11,8 +12,10 @@ namespace ColoredHoneyLabels
 		public const string HoneyObjectUnqualifiedIndentifier = "340";
 		public static readonly string HoneyObjectQualifiedIndentifier = $"(O){HoneyObjectUnqualifiedIndentifier}";
 		public const string HoneyObjectParentAssetName = "Data/Objects";
+		public static readonly Color WildHoneyLabelColor = Color.White;
 
 		public static string ModDataKey_HasColoredLabel => $"{ModEntry.ModID}_has_colored_label";
+		public static string ModDataKey_LabelColorPackedValue => $"{ModEntry.ModID}_label_color_packed_value";
 
 		#if DEBUG
 			// For debug builds, show log messages as DEBUG so they show in the SMAPI console.

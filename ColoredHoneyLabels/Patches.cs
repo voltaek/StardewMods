@@ -42,45 +42,7 @@ namespace ColoredHoneyLabels
 		{
 			try
 			{
-				if (ConsoleCommands.HasRunUndoHoneyColorsCommand)
-				{
-					Logger.Log($"Skipping coloring the honey object in {nameof(CreateFlavoredHoney_ObjectDataDefinition_Postfix)} "
-						+ $"due to the {ConsoleCommands.UndoHoneyColors} console command having been run.", LogLevel.Debug);
-
-					return;
-				}
-
-				Color wildHoneyLabelColor = Color.White;
-				Color labelColor = TailoringMenu.GetDyeColor(ingredient) ?? wildHoneyLabelColor;
-
-				if (!ModEntry.Config.MoreLabelColorVariety)
-				{
-					Logger.VerboseLog($"Label color: {labelColor.R} {labelColor.G} {labelColor.B} (RGB)");
-				}
-				else
-				{
-					if (!String.IsNullOrWhiteSpace(ingredient?.BaseName))
-					{
-						// Vary color based on the ingredient/honey flavor source's name. Sum the name's char bytes and vary based on odd or even.
-						bool shouldVary = ingredient.BaseName.ToCharArray().Select(Convert.ToInt32).Sum() % 2 == 0;
-						Logger.VerboseLog($"Ingredient '{ingredient.BaseName}' with {ingredient.GetContextTags().FirstOrDefault(x => x.StartsWith("color_"))}");
-
-						if (shouldVary)
-						{
-							Logger.VerboseLog($"Original color: {labelColor.R} {labelColor.G} {labelColor.B} (RGB)");
-							labelColor = Utility.ShiftColor(labelColor);
-							Logger.VerboseLog($"Shifted color using for label: {labelColor.R} {labelColor.G} {labelColor.B} (RGB)");
-						}
-						else
-						{
-							Logger.VerboseLog($"Color for label: {labelColor.R} {labelColor.G} {labelColor.B} (RGB)");
-						}
-					}
-					else
-					{
-						Logger.VerboseLog("No honey ingredient (such as for Wild Honey) or no ingredient BaseName value to potentially vary label color with");
-					}
-				}
+				Color labelColor = Utility.GetLabelColorFromHoneyIngredient(ingredient);
 
 				if (!ColoredObject.TrySetColor(__result, labelColor, out ColoredObject coloredHoney))
 				{
@@ -89,8 +51,8 @@ namespace ColoredHoneyLabels
 					return;
 				}
 
-				// Mark the object as having been modified by this mod
-				coloredHoney.modData.Add(Constants.ModDataKey_HasColoredLabel, "1");
+				// Whenever we calc a color we should notate the outcome so we can avoid recalcs later.
+				coloredHoney.StoreLabelColor(labelColor);
 
 				__result = coloredHoney;
 			}

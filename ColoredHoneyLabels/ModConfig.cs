@@ -23,7 +23,7 @@ namespace ColoredHoneyLabels
 		internal bool AreContentPatcherEditsReady => HasGameLaunched && Game1.ticks >= TickContentPatcherEditsReady;
 
 		/// <summary>Subscribe to event handlers that will register our mod and its config options with GMCM later.</summary>
-		internal void ScheduleRegistration()
+		internal void ScheduleEventRegistration()
 		{
 			// Set up Generic Mod Config Menu integration
 			ModEntry.Context.Helper.Events.GameLoop.GameLaunched += OnGameLaunched;
@@ -110,6 +110,12 @@ namespace ColoredHoneyLabels
 					MoreLabelColorVariety = value;
 
 					ModEntry.Logger.Log($"Updated {nameof(MoreLabelColorVariety)} config value via GMCM from '{oldValue}' to '{value}'", LogLevel.Debug);
+
+					if (oldValue != value)
+					{
+						// If they changed the value, recalc all colors so they match the currently selected option value
+						Utility.RefreshAllHoneyColors();
+					}
 				}
 			);
 		}

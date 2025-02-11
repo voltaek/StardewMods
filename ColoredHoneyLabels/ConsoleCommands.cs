@@ -14,12 +14,9 @@ namespace ColoredHoneyLabels
 		/// <summary>Shorthand for the main logger instance.</summary>
 		private static IMonitor Logger => ModEntry.Logger;
 
-		public const string UndoHoneyColors = "chl_undo_honey_colors";
 		public const string GiveTestHoney = "chl_give_test_honey";
 		public const string GiveTestHoneyList = "chl_give_test_honey_list";
 		public const string ClearInventoryHoney = "chl_clear_inventory_honey";
-
-		public static bool HasRunUndoHoneyColorsCommand { get; private set; } = false;
 
 		public static readonly List<string> TestHoneyIngredientIdentifiers = new() {
 			// Spring
@@ -61,27 +58,9 @@ namespace ColoredHoneyLabels
 
 		private static int TestHoneyIngredientListLastOutputIndex = -1;
 
-		/// <summary>
-		/// Reset tracked values that were changed when the user ran the console command to undo all colored honey objects.
-		/// </summary>
-		internal static void ResetUndoHoneyColors()
-		{
-			HasRunUndoHoneyColorsCommand = false;
-		}
-
 		/// <summary>Initialize our custom console commands.</summary>
 		public static void AddCommands()
 		{
-			ModEntry.Context.Helper.ConsoleCommands.Add(
-				ConsoleCommands.UndoHoneyColors,
-				$"Restores all honey items in the entire save (all player inventories, chests, machines, etc.) which were modified by this mod "
-					+ $"({ModEntry.Context.ModManifest.Name}) to be normal, non-colored honey items.\n\n"
-					+ $"Also, until the current save or the game itself is closed, only default honey objects will be created, and all honey items will have the default honey icon/texture.\n\n"
-					+ $"If you save your game after this has run, then once the game is closed you can safely uninstall the mod and have normal honey items the next time you open your save game.\n\n"
-					+ $"Usage: {ConsoleCommands.UndoHoneyColors} [retry]\n"
-					+ $"- retry: (bool) [optional, default: 0] Attempt to restore all honey items created by the mod, even if they were already restored to being a non-colored item.",
-				UndoHoneyColorsCommand);
-
 			ModEntry.Context.Helper.ConsoleCommands.Add(
 				ConsoleCommands.GiveTestHoney,
 				$"Puts one test honey object - flavored by the item with the given identifier, if any - into the farmer's inventory.\n\n"
@@ -101,75 +80,6 @@ namespace ColoredHoneyLabels
 				ConsoleCommands.ClearInventoryHoney,
 				$"Clears all honey objects from the farmer's inventory. The command has no parameters.",
 				ClearInventoryHoneyCommand);
-		}
-
-		/// <summary>Run our custom console command to attempt to restore all Honey items this mod has created back to vanilla, non-colored honey objects.</summary>
-		/// <param name="command">The name of the command invoked.</param>
-		/// <param name="args">The arguments received by the command. Each word after the command name is a separate argument.</param>
-		private static void UndoHoneyColorsCommand(string command, string[] args)
-		{
-			Logger.Log($"Console command '{command}' invoked with {(args == null || args.Length == 0 ? "no " : "")}params"
-				+ (args?.Length > 0 ? ": " + String.Join(", ", args.Select(x => $"'{x}'")) : ""), LogLevel.Trace);
-
-			bool shouldRetryAll = false;
-
-			if (args != null && args.Length > 0)
-			{
-				shouldRetryAll = ParseBoolParam(args[0]);
-			}
-
-			int restoredAsObjects = 0;
-
-			try
-			{
-				// Mark that this command has been run so we can start the process of reverting our data and object edits.
-				HasRunUndoHoneyColorsCommand = true;
-
-				// By resetting the cache, our asset requested event handler can restore the default honey object data values.
-				// Then when creating a new object below, it will be created with the proper default values.
-				ModEntry.Context.Helper.GameContent.InvalidateCache(Constants.HoneyObjectParentAssetName);
-
-				// Go through all items in the game world to update the relevant honey objects
-				StardewValley.Utility.ForEachItemContext(delegate (in ForEachItemContext context)
-				{
-					if (context.Item.QualifiedItemId != Constants.HoneyObjectQualifiedIndentifier
-						|| !context.Item.modData.Keys.Contains(Constants.ModDataKey_HasColoredLabel))
-					{
-						return true;
-					}
-
-					// If we're not retrying all objects and we've previously "restored" this object, then skip it.
-					if (!shouldRetryAll && context.Item.modData[Constants.ModDataKey_HasColoredLabel] == "0")
-					{
-						return true;
-					}
-
-					// Update the mod data entry we added to mark this mod as having modified it
-					context.Item.modData[Constants.ModDataKey_HasColoredLabel] = "0";
-
-					// Change our `ColoredObject` back to an `Object`, as it is in vanilla.
-					SObject honeyObject = new(context.Item.ItemId, context.Item.Stack);
-					
-					// Restore all field values from the original object
-					honeyObject.CopyFieldsFrom(context.Item);
-
-					// The `CopyFieldsFrom()` method uses `GetOneCopyFrom()` internally, so need to reset the stack size
-					// from the hardcoded '1' in there to the actual value.
-					honeyObject.Stack = context.Item.Stack;
-
-					// Replace the `ColoredObject` with our `Object` recreated from it
-					context.ReplaceItemWith(honeyObject);
-					restoredAsObjects += 1;
-
-					return true;
-				});
-			}
-			catch (Exception ex)
-			{
-				Logger.Log($"An error occurred while updating Honey objects in the {UndoHoneyColors} console command.\nException Details:\n{ex}", LogLevel.Warn);
-			}
-
-			Logger.Log($"Removed color and restored default values to {restoredAsObjects} honey objects created by {ModEntry.Context.ModManifest.Name}.", LogLevel.Info);
 		}
 
 		/// <summary>Run our custom console command to create a Honey item flavored with an optionally specified ingredient.</summary>
