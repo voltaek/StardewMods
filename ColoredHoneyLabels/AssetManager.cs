@@ -162,6 +162,7 @@ namespace ColoredHoneyLabels
 			}
 		}
 
+		/// <summary>Registers the event handlers we need for this manager to operate.</summary>
 		internal static void RegisterEvents()
 		{
 			// Manage our custom asset and modifications to the honey object's definition

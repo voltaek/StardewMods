@@ -1,4 +1,5 @@
-﻿using Microsoft.Xna.Framework;
+﻿using ColoredHoneyLabels.Extensions;
+using Microsoft.Xna.Framework;
 using StardewModdingAPI.Events;
 using StardewValley.Extensions;
 using StardewValley.Internal;
@@ -16,6 +17,7 @@ namespace ColoredHoneyLabels
 		/// <summary>Shorthand for the main logger instance.</summary>
 		private static IMonitor Logger => ModEntry.Logger;
 
+		/// <summary>Registers the event handlers we need for this manager to operate.</summary>
 		internal static void RegisterEvents()
 		{
 			ModEntry.Context.Helper.Events.GameLoop.SaveLoaded += OnSaveLoaded;
@@ -23,15 +25,17 @@ namespace ColoredHoneyLabels
 			ModEntry.Context.Helper.Events.GameLoop.Saved += OnSaved;
 		}
 
+		/// <inheritdoc cref="IGameLoopEvents.SaveLoaded"/>
 		private static void OnSaveLoaded(object? sender, SaveLoadedEventArgs e)
 		{
 			Logger.VerboseLog($"{Utility.VerboseStart} {nameof(OnSaveLoaded)} - Started");
 
-			PrepareHoneyForUse();
+			PrepareHoneyForDisplay();
 
 			Logger.VerboseLog($"{Utility.VerboseStart} {nameof(OnSaveLoaded)} - Ended");
 		}
 
+		/// <inheritdoc cref="IGameLoopEvents.Saving"/>
 		private static void OnSaving(object? sender, SavingEventArgs e)
 		{
 			Logger.VerboseLog($"{Utility.VerboseStart} {nameof(OnSaving)} - Started");
@@ -41,20 +45,26 @@ namespace ColoredHoneyLabels
 			Logger.VerboseLog($"{Utility.VerboseStart} {nameof(OnSaving)} - Ended");
 		}
 
+		/// <inheritdoc cref="IGameLoopEvents.Saved"/>
 		private static void OnSaved(object? sender, SavedEventArgs e)
 		{
 			Logger.VerboseLog($"{Utility.VerboseStart} {nameof(OnSaved)} - Started");
 
-			PrepareHoneyForUse();
+			PrepareHoneyForDisplay();
 
 			Logger.VerboseLog($"{Utility.VerboseStart} {nameof(OnSaved)} - Ended");
 		}
 
-		private static void PrepareHoneyForUse()
+		/// <summary>Update all honey objects in the save for display by our mod.</summary>
+		private static void PrepareHoneyForDisplay()
 		{
+			int existingColoredCount = 0;
+			int newlyColoredCount = 0;
+			int existingNonColoredCount = 0;
+
 			try
 			{
-				// Go through all items in the game world to update both standard and colored honey objects to ready them for use in the world
+				// Go through all items in the game world to update both standard and colored honey objects to ready them for display in the world
 				StardewValley.Utility.ForEachItemContext(delegate (in ForEachItemContext context)
 				{
 					if (context.Item.QualifiedItemId != Constants.HoneyObjectQualifiedIndentifier || context.Item is not SObject honeyObject)
@@ -77,30 +87,51 @@ namespace ColoredHoneyLabels
 							// If the existing colored honey object has its label color stored on it, then restore its color to that
 							coloredItem.color.Value = storedColor.Value;
 						}
+
+						existingColoredCount += 1;
 					}
 					else
 					{
-						// Attempt to convert any non-colored honey to be colored
-						ColoredObject? coloredHoneyObject = Utility.GetColoredHoneyObjectFromHoneyObject(honeyObject);
+						// Attempt to convert any non-colored honey to be colored.
+						// This includes honey items that existed in the save before this mod was installed,
+						// but also generated items such as those held by Bee Houses.
+						ColoredObject? coloredHoneyObject = ColorManager.GetColoredHoneyObjectFromHoneyObject(honeyObject);
 
 						if (coloredHoneyObject != null)
 						{
 							// Replace the `Object` with our `ColoredObject` recreated from it
 							context.ReplaceItemWith(coloredHoneyObject);
+
+							newlyColoredCount += 1;
+						}
+						else
+						{
+							existingNonColoredCount += 1;
 						}
 					}
 
 					return true;
 				});
+
+				Logger.Log($"Honey objects prepared for use: [{existingColoredCount} Existing Colored] "
+					+ $"[{newlyColoredCount} Newly Colored] [{existingNonColoredCount} Non-Colored]", Constants.BuildLogLevel);
 			}
 			catch (Exception ex)
 			{
-				Logger.Log($"An error occurred while updating Honey objects in {nameof(PrepareHoneyForUse)}.\nException Details:\n{ex}", LogLevel.Info);
+				Logger.Log($"An error occurred while updating Honey objects in {nameof(PrepareHoneyForDisplay)}.\nException Details:\n{ex}", LogLevel.Info);
 			}
 		}
 
+		/// <summary>
+		/// Update all honey objects in the save to be stored in the save file.
+		/// We update them so that if this mod is uninstalled the honey objects will look vanilla; no broken sprites, weird color overlays, etc.
+		/// While doing that, we also set up the honey objects to be able to be performantly converted back to fully-colored honey objects by our mod.
+		/// </summary>
 		private static void PrepareHoneyForStorage()
 		{
+			int coloredCount = 0;
+			int nonColoredCount = 0;
+
 			try
 			{
 				// Go through all items in the game world to update both standard and colored honey objects to ready them for storage/saving
@@ -130,15 +161,25 @@ namespace ColoredHoneyLabels
 							coloredItem.StoreLabelColor(coloredItem.color.Value);
 						}
 
-						// Set the honey's color to white and set the color/tint to overlay on the honey sprite itself, rather than the next index's sprite.
+						// Change the honey object's color to white and configure it so its own sprite gets "tinted" rather than the next
+						// index's sprite - which would then get overlaid onto the honey sprite.
+						// Note that setting the color to transparent doesn't work; the whole honey sprite becomes transparent/invisible.
 						// Doing this means even though this honey is a `ColoredObject`, the tint will have essentially no affect.
 						// This will allow all honey objects - "colored" or not - to appear the same as each other if this mod gets uninstalled.
-						coloredItem.color.Value = Color.White;
+						coloredItem.color.Value = Constants.SaveCompatibilityLabelColor;
 						coloredItem.ColorSameIndexAsParentSheetIndex = true;
+
+						coloredCount += 1;
+					}
+					else
+					{
+						nonColoredCount += 1;
 					}
 
 					return true;
 				});
+
+				Logger.Log($"Honey objects prepared for saving: [{coloredCount} Colored] [{nonColoredCount} Non-Colored]", Constants.BuildLogLevel);
 			}
 			catch (Exception ex)
 			{

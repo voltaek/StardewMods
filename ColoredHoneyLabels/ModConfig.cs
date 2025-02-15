@@ -114,7 +114,7 @@ namespace ColoredHoneyLabels
 					if (oldValue != value)
 					{
 						// If they changed the value, recalc all colors so they match the currently selected option value
-						Utility.RefreshAllHoneyColors();
+						ColorManager.RefreshAllHoneyColors();
 					}
 				}
 			);

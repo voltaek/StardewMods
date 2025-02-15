@@ -13,8 +13,8 @@ namespace ColoredHoneyLabels
 		public static readonly string HoneyObjectQualifiedIndentifier = $"(O){HoneyObjectUnqualifiedIndentifier}";
 		public const string HoneyObjectParentAssetName = "Data/Objects";
 		public static readonly Color WildHoneyLabelColor = Color.White;
+		public static readonly Color SaveCompatibilityLabelColor = Color.White;
 
-		public static string ModDataKey_HasColoredLabel => $"{ModEntry.ModID}_has_colored_label";
 		public static string ModDataKey_LabelColorPackedValue => $"{ModEntry.ModID}_label_color_packed_value";
 
 		#if DEBUG

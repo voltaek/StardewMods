@@ -1,5 +1,4 @@
 ﻿using StardewValley.Extensions;
-using StardewValley.Internal;
 using StardewValley.ItemTypeDefinitions;
 using System;
 using System.Collections.Generic;
@@ -117,7 +116,7 @@ namespace ColoredHoneyLabels
 			}
 
 			SObject testHoney = ItemRegistry.GetObjectTypeDefinition().CreateFlavoredHoney(ingredient);
-			testHoney.Price = 0;
+			testHoney.Price = 1;
 
 			Game1.player.addItemToInventory(testHoney);
 		}
@@ -184,7 +183,7 @@ namespace ColoredHoneyLabels
 				TestHoneyIngredientListLastOutputIndex = ingredientIndex;
 
 				SObject testListHoney = objectDataDefinition.CreateFlavoredHoney(ingredient);
-				testListHoney.Price = 0;
+				testListHoney.Price = 1;
 
 				honeys.Add(testListHoney);
 

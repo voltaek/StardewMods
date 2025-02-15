@@ -1,4 +1,5 @@
-﻿using HarmonyLib;
+﻿using ColoredHoneyLabels.Extensions;
+using HarmonyLib;
 using Microsoft.Xna.Framework;
 using StardewValley.ItemTypeDefinitions;
 using StardewValley.Menus;
@@ -42,7 +43,7 @@ namespace ColoredHoneyLabels
 		{
 			try
 			{
-				Color labelColor = Utility.GetLabelColorFromHoneyIngredient(ingredient);
+				Color labelColor = ColorManager.GetLabelColorFromHoneyIngredient(ingredient);
 
 				if (!ColoredObject.TrySetColor(__result, labelColor, out ColoredObject coloredHoney))
 				{
