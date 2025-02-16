@@ -1,5 +1,4 @@
-﻿using StardewModdingAPI.Events;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -34,15 +33,13 @@ namespace ColoredHoneyLabels
 
 			// Read user's config and schedule to register our mod and its config options
 			Config = Helper.ReadConfig<ModConfig>();
-			Config.ScheduleRegistration();
+			Config.ScheduleEventRegistration();
 
 			// Manage our custom asset and modifications to the honey object's definition
-			Helper.Events.Content.AssetRequested += AssetManager.OnAssetRequested;
-			Helper.Events.Content.AssetsInvalidated += AssetManager.OnAssetsInvalidated;
-			Helper.Events.Content.AssetReady += AssetManager.OnAssetReady;
+			AssetManager.RegisterEvents();
 
-			// Reset some things between save games
-			Helper.Events.GameLoop.ReturnedToTitle += AssetManager.OnReturnedToTitle;
+			// Manage data updates when saving and loading save games
+			SaveManager.RegisterEvents();
 
 			// Apply Harmony patches so that honey items are created as the `ColoredObject` type and get their color assigned to them.
 			Patches.ApplyPatches();

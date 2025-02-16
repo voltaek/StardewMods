@@ -23,7 +23,7 @@ namespace ColoredHoneyLabels
 		internal bool AreContentPatcherEditsReady => HasGameLaunched && Game1.ticks >= TickContentPatcherEditsReady;
 
 		/// <summary>Subscribe to event handlers that will register our mod and its config options with GMCM later.</summary>
-		internal void ScheduleRegistration()
+		internal void ScheduleEventRegistration()
 		{
 			// Set up Generic Mod Config Menu integration
 			ModEntry.Context.Helper.Events.GameLoop.GameLaunched += OnGameLaunched;
@@ -81,9 +81,12 @@ namespace ColoredHoneyLabels
 					string? oldValue = SpriteDataKey;
 					SpriteDataKey = value;
 
-					ModEntry.Logger.Log($"Updated {nameof(SpriteDataKey)} config value via GMCM from {(oldValue == null ? "`null`" : $"'{oldValue}'")} to '{value}'", LogLevel.Debug);
+					if (oldValue != value)
+					{
+						ModEntry.Logger.Log($"Updated {nameof(SpriteDataKey)} config value via GMCM from {(oldValue == null ? "`null`" : $"'{oldValue}'")} to '{value}'", LogLevel.Debug);
 
-					AssetManager.RefreshHoneyData();
+						AssetManager.RefreshHoneyData();
+					}
 				},
 				// NOTE - Since these values are only assigned once, our list of CP-loaded-and-edited sprite data needs to already have any edits from other mods in it.
 				// If we register this immediately at GameLaunched then Content Patcher will only have done the initial load of our data asset,
@@ -109,7 +112,13 @@ namespace ColoredHoneyLabels
 					bool oldValue = MoreLabelColorVariety;
 					MoreLabelColorVariety = value;
 
-					ModEntry.Logger.Log($"Updated {nameof(MoreLabelColorVariety)} config value via GMCM from '{oldValue}' to '{value}'", LogLevel.Debug);
+					if (oldValue != value)
+					{
+						ModEntry.Logger.Log($"Updated {nameof(MoreLabelColorVariety)} config value via GMCM from '{oldValue}' to '{value}'", LogLevel.Debug);
+
+						// If they changed the value, recalc all colors so they match the currently selected option value
+						ColorManager.RefreshAllHoneyColors();
+					}
 				}
 			);
 		}
