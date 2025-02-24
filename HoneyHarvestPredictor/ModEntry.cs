@@ -11,6 +11,8 @@ namespace HoneyHarvestPredictor
 {
     internal sealed class ModEntry : Mod
 	{
+		#nullable disable
+
 		/// <summary>A reference to our mod's instantiation to use everywhere.</summary>
 		internal static ModEntry Context { get; private set; }
 
@@ -22,6 +24,8 @@ namespace HoneyHarvestPredictor
 
 		/// <summary>Logic and values to increase compatibility with other mods.</summary>
 		internal static ModCompat Compat { get; private set; }
+		
+		#nullable enable
 
 		/// <summary>The mod entry point, called after the mod is first loaded.</summary>
 		/// <param name="helper">Provides simplified APIs for writing mods.</param>
@@ -102,7 +106,7 @@ namespace HoneyHarvestPredictor
 		/// <summary>Event handler for when the game launches.</summary>
 		/// <param name="sender">The event sender.</param>
 		/// <param name="e">The event arguments.</param>
-		private void OnGameLaunched(object sender, GameLaunchedEventArgs e)
+		private void OnGameLaunched(object? sender, GameLaunchedEventArgs e)
 		{
 			try
 			{
@@ -115,7 +119,7 @@ namespace HoneyHarvestPredictor
 			}
 
 			// Get Generic Mod Config Menu's API (if it's installed)
-			IGenericModConfigMenuApi configMenu = this.Helper.ModRegistry.GetApi<IGenericModConfigMenuApi>("spacechase0.GenericModConfigMenu");
+			IGenericModConfigMenuApi? configMenu = this.Helper.ModRegistry.GetApi<IGenericModConfigMenuApi>("spacechase0.GenericModConfigMenu");
 
 			if (configMenu is null)
 			{

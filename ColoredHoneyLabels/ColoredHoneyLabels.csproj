@@ -6,13 +6,14 @@
     <UniqueId>voltaek.ColoredHoneyLabels</UniqueId>
     <UpdateKeys>Nexus:30945</UpdateKeys>
     <EnableHarmony>true</EnableHarmony>
-    <Nullable>enable</Nullable>
     <IgnoreModFilePaths>assets/honey-debug.png</IgnoreModFilePaths>
+    <!-- Toggle to test integration mods in Debug builds. Will need to clear the built-mod-deployed-to directory since folder hierarchy changes. -->
+    <TestIntegrationMods>false</TestIntegrationMods>
   </PropertyGroup>
   <ItemGroup>
     <None Condition="$(Configuration) == 'Release'" Remove="assets/honey-debug.png" />
   </ItemGroup>
-  <ItemGroup Condition="$(Configuration) == 'Debug'">
+  <ItemGroup Condition="$(Configuration) == 'Debug' And $(TestIntegrationMods)">
     <ContentPacks Include="ExampleIntegrationMods/[CP] Example Simple CHL Integration" Version="0.0.1" />
     <ContentPacks Include="ExampleIntegrationMods/[CP] Example Intermediate CHL Integration" Version="0.0.1" />
   </ItemGroup>

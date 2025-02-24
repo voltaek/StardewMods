@@ -56,9 +56,9 @@ namespace HoneyHarvestPredictor
 		public const string betterBeehousesModDataSourceTypeKey = "tlitookilakin.BetterBeehouses.SourceType";
 		public const string betterBeehousesModDataFromPotKey = "tlitookilakin.BetterBeehouses.FromPot";
 
-		private IModInfo BetterBeehousesModInfo { get; set; } = null;
+		private IModInfo? BetterBeehousesModInfo { get; set; } = null;
 		private bool IsCurrentBetterBeehousesModLoaded { get; set; } = false;
-		private IBetterBeehousesAPI BetterBeehousesAPI { get; set; } = null;
+		private IBetterBeehousesAPI? BetterBeehousesAPI { get; set; } = null;
 
 		/// <summary>
 		/// Call this to set up compatibility values and APIs. We have to wait until after `Entry()` before attempting to access their APIs, though,

@@ -6,6 +6,7 @@
     <RepositoryType>git</RepositoryType>
     <TargetFramework>net6.0</TargetFramework>
     <LangVersion>latest</LangVersion>
+    <Nullable>enable</Nullable>
     
     <!-- ModBuildConfig options, ref: https://github.com/Pathoschild/SMAPI/blob/develop/docs/technical/mod-package.md#configure -->
     <EnableModZip Condition="'$(Configuration)' == 'Debug'">False</EnableModZip>
