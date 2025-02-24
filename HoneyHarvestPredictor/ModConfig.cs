@@ -19,7 +19,7 @@ namespace HoneyHarvestPredictor
 		internal ReadyIcon BeeHouseReadyIconEnum { get; private set; } = defaultBeeHouseReadyIcon;
 		public string BeeHouseReadyIcon
 		{
-			get => Enum.GetName(BeeHouseReadyIconEnum);
+			get => Enum.GetName(BeeHouseReadyIconEnum) ?? $"{nameof(ReadyIcon.Flower)}";
 
 			set
 			{

@@ -40,10 +40,7 @@ namespace HoneyHarvestPredictor
 			get { return Constants.maxMinutesAwake - Utility.CalculateMinutesBetweenTimes(Constants.startOfDayTime, Game1.timeOfDay); }
 		}
 
-		internal static MachineData BeeHouseMachineData
-		{
-			get { return DataLoader.Machines(Game1.content).GetValueOrDefault(Constants.beeHouseQualifiedItemID); }
-		}
+		internal static MachineData? BeeHouseMachineData => DataLoader.Machines(Game1.content).GetValueOrDefault(Constants.beeHouseQualifiedItemID);
 
 		private static bool areAllBeeHouseOutputRulesByDay = false;
 		private static string beeHouseDailyRefreshCheckTimestamp = String.Empty;
@@ -98,7 +95,7 @@ namespace HoneyHarvestPredictor
 		/// </summary>
 		/// <param name="locationName">The game's name for a location</param>
 		/// <returns>The `GameLocation` object if found; `null` if not.</returns>
-		internal static GameLocation FetchLocationByName(string locationName)
+		internal static GameLocation? FetchLocationByName(string locationName)
 		{
 			// This base game method will get from cache where possible and handles locations which are buildings.
 			GameLocation location = Game1.getLocationFromName(locationName);

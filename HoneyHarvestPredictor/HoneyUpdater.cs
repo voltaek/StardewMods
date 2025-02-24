@@ -51,7 +51,7 @@ namespace HoneyHarvestPredictor
 		/// <summary>Event handler for after a new day starts.</summary>
 		/// <param name="sender">The event sender.</param>
 		/// <param name="e">The event arguments.</param>
-		internal static void OnDayStarted(object sender, DayStartedEventArgs e)
+		internal static void OnDayStarted(object? sender, DayStartedEventArgs e)
 		{
 			Logger.VerboseLog($"{VerboseStart} {nameof(OnDayStarted)} - Started");
 
@@ -67,7 +67,7 @@ namespace HoneyHarvestPredictor
 		/// </summary>
 		/// <param name="sender">The event sender.</param>
 		/// <param name="e">The event arguments.</param>
-		internal static void OnDayEnding(object sender, DayEndingEventArgs e)
+		internal static void OnDayEnding(object? sender, DayEndingEventArgs e)
 		{
 			Logger.VerboseLog($"{VerboseStart} {nameof(OnDayEnding)} - Started");
 
@@ -82,7 +82,7 @@ namespace HoneyHarvestPredictor
 		/// </summary>
 		/// <param name="sender">The event sender.</param>
 		/// <param name="e">The event arguments.</param>
-		internal static void OnReturnedToTitle(object sender, ReturnedToTitleEventArgs e)
+		internal static void OnReturnedToTitle(object? sender, ReturnedToTitleEventArgs e)
 		{
 			Logger.VerboseLog($"{VerboseStart} {nameof(OnReturnedToTitle)} - Started");
 
@@ -94,7 +94,7 @@ namespace HoneyHarvestPredictor
 		/// <summary>Event handler for when the in-game clock changes.</summary>
 		/// <param name="sender">The event sender.</param>
 		/// <param name="e">The event arguments.</param>
-		internal static void OnTimeChanged(object sender, TimeChangedEventArgs e)
+		internal static void OnTimeChanged(object? sender, TimeChangedEventArgs e)
 		{
 			// We don't need to day anything right when we wake up, since that's handled by `OnDayStarted`,
 			// and we don't want to have any race conditions with it, either.
@@ -120,7 +120,7 @@ namespace HoneyHarvestPredictor
 
 				Log($"{nameof(OnTimeChanged)} - Found {newlyReadyBeeHouses.Count} newly ready bee houses in {entry.Key} location");
 
-				GameLocation location = Utilities.FetchLocationByName(entry.Key);
+				GameLocation? location = Utilities.FetchLocationByName(entry.Key);
 
 				if (location != null)
 				{
@@ -141,7 +141,7 @@ namespace HoneyHarvestPredictor
 		/// <summary>Event handler for after the game state is updated, once per second.</summary>
 		/// <param name="sender">The event sender.</param>
 		/// <param name="e">The event arguments.</param>
-		internal static void OnOneSecondUpdateTicked(object sender, OneSecondUpdateTickedEventArgs e)
+		internal static void OnOneSecondUpdateTicked(object? sender, OneSecondUpdateTickedEventArgs e)
 		{
 			// Every X seconds (note: ≈60 ticks/second), refresh everything if we found that another mod has changed settings we care about.
 			if (e.IsMultipleOf(5 * 60) && ModEntry.Compat.DidCompatModConfigChange())
@@ -157,7 +157,7 @@ namespace HoneyHarvestPredictor
 		/// </summary>
 		/// <param name="sender"></param>
 		/// <param name="e"></param>
-		internal static void OnUpdateTicked(object sender, UpdateTickedEventArgs e)
+		internal static void OnUpdateTicked(object? sender, UpdateTickedEventArgs e)
 		{
 			// Every X ticks, check if we scheduled any tiles to update bee houses around
 			if (e.IsMultipleOf(10))
@@ -178,7 +178,7 @@ namespace HoneyHarvestPredictor
 		/// </summary>
 		/// <param name="sender">The event sender.</param>
 		/// <param name="e">The event arguments.</param>
-		internal static void OnObjectListChanged(object sender, ObjectListChangedEventArgs e)
+		internal static void OnObjectListChanged(object? sender, ObjectListChangedEventArgs e)
 		{
 			string locationName = e.Location.NameOrUniqueName;
 
@@ -207,12 +207,12 @@ namespace HoneyHarvestPredictor
 			// Collect all tiles to update around for this location
 			HashSet<Vector2> updateNearTiles = new();
 
-			IEnumerable<IndoorPot> removedIndoorPots = null;
+			IEnumerable<IndoorPot>? removedIndoorPots = null;
 
 			if (e.Removed.Any(x => x.Value.QualifiedItemId == Constants.gardenPotQualifiedItemID))
 			{
 				// If some objects have pot IDs, then extract them typed
-				removedIndoorPots = e.Removed.Select(x => x.Value as IndoorPot).Where(x => x is not null && x.QualifiedItemId == Constants.gardenPotQualifiedItemID);
+				removedIndoorPots = e.Removed.Where(x => x.Value.QualifiedItemId == Constants.gardenPotQualifiedItemID).Select(x => x.Value).OfType<IndoorPot>();
 			}
 
 			// If some pots were removed, check for vanilla situations we need to handle, such as a bomb destroying a pot and its dirt all at once, which skips the harvesting trigger.
@@ -224,7 +224,7 @@ namespace HoneyHarvestPredictor
 
 				if (removedLocationPotDirt.Any())
 				{
-					Log($"{nameof(OnObjectListChanged)} - Removed {removedLocationPotDirt.Count()} of the removed crop-dirt-holding indoor pots in {locationName} location"
+					Log($"{nameof(OnObjectListChanged)} - Removed {removedLocationPotDirt.Count} of the removed crop-dirt-holding indoor pots in {locationName} location"
 						+ $" @ [{String.Join(", ", removedLocationPotDirt.Select(y => y.Pot?.TileLocation ?? y.Tile))}]");
 
 					// Hold onto where in the GameLocation we need to update near
@@ -256,37 +256,44 @@ namespace HoneyHarvestPredictor
 			{
 				Log($"{nameof(OnObjectListChanged)} - Found {removedIndoorPots.Count()} removed garden pots to attempt to remove from tracking in {locationName} location (modded checks)");
 
-				List<IndoorPot> removedLocationForagePots = nearbyForageIndoorPots[locationName].Where(removedIndoorPots.Contains).ToList();
-				List<IndoorPot> removedLocationBushPots = nearbyBushIndoorPots[locationName].Where(removedIndoorPots.Contains).ToList();
-
-				if (removedLocationForagePots.Any())
+				if (nearbyForageIndoorPots.ContainsKey(locationName))
 				{
-					Log($"{nameof(OnObjectListChanged)} - Removed {removedLocationForagePots.Count()} of the removed forage-holding indoor pots in {locationName} location"
-						+ $" @ [{String.Join(", ", removedLocationForagePots.Select(y => y.TileLocation))}].");
+					List<IndoorPot> removedLocationForagePots = nearbyForageIndoorPots[locationName].Where(removedIndoorPots.Contains).ToList();
 
-					// Hold onto where in the GameLocation we need to update near
-					updateNearTiles.AddRange(removedLocationForagePots.Select(x => x.TileLocation));
+					if (removedLocationForagePots.Any())
+					{
+						Log($"{nameof(OnObjectListChanged)} - Removed {removedLocationForagePots.Count} of the removed forage-holding indoor pots in {locationName} location"
+							+ $" @ [{String.Join(", ", removedLocationForagePots.Select(y => y.TileLocation))}].");
 
-					// Remove the indoor pot(s) from being tracked
-					removedLocationForagePots.ForEach(pot => Tracking.CleanupListener(pot, locationName));
-					nearbyForageIndoorPots[locationName].RemoveWhere(removedLocationForagePots.Contains);
+						// Hold onto where in the GameLocation we need to update near
+						updateNearTiles.AddRange(removedLocationForagePots.Select(x => x.TileLocation));
+
+						// Remove the indoor pot(s) from being tracked
+						removedLocationForagePots.ForEach(pot => Tracking.CleanupListener(pot, locationName));
+						nearbyForageIndoorPots[locationName].RemoveWhere(removedLocationForagePots.Contains);
+					}
 				}
 
-				if (removedLocationBushPots.Any())
+				if (nearbyBushIndoorPots.ContainsKey(locationName))
 				{
-					Log($"{nameof(OnObjectListChanged)} - Removed {removedLocationBushPots.Count()} of the removed bush-hosting indoor pots in {locationName} location"
-						+ $" @ [{String.Join(", ", removedLocationBushPots.Select(y => y.TileLocation))}]");
+					List<IndoorPot> removedLocationBushPots = nearbyBushIndoorPots[locationName].Where(removedIndoorPots.Contains).ToList();
 
-					// Hold onto where in the GameLocation we need to update near
-					updateNearTiles.AddRange(removedLocationBushPots.Select(x => x.TileLocation));
+					if (removedLocationBushPots.Any())
+					{
+						Log($"{nameof(OnObjectListChanged)} - Removed {removedLocationBushPots.Count} of the removed bush-hosting indoor pots in {locationName} location"
+							+ $" @ [{String.Join(", ", removedLocationBushPots.Select(y => y.TileLocation))}]");
 
-					// Remove the indoor pot(s) from being tracked
-					removedLocationBushPots.ForEach(pot => Tracking.CleanupListener(pot, locationName));
-					nearbyBushIndoorPots[locationName].RemoveWhere(removedLocationBushPots.Contains);
+						// Hold onto where in the GameLocation we need to update near
+						updateNearTiles.AddRange(removedLocationBushPots.Select(x => x.TileLocation));
 
-					// Also need to remove the bush(es) in the indoor pot(s) from being tracked, since we have to track them for being harvested
-					removedLocationBushPots.ForEach(pot => Tracking.CleanupListener(pot.bush.Value, locationName));
-					nearbyBushes[locationName].RemoveWhere(bush => removedLocationBushPots.Select(pot => pot.bush.Value).Contains(bush));
+						// Remove the indoor pot(s) from being tracked
+						removedLocationBushPots.ForEach(pot => Tracking.CleanupListener(pot, locationName));
+						nearbyBushIndoorPots[locationName].RemoveWhere(removedLocationBushPots.Contains);
+
+						// Also need to remove the bush(es) in the indoor pot(s) from being tracked, since we have to track them for being harvested
+						removedLocationBushPots.ForEach(pot => Tracking.CleanupListener(pot.bush.Value, locationName));
+						nearbyBushes[locationName].RemoveWhere(bush => removedLocationBushPots.Select(pot => pot.bush.Value).Contains(bush));
+					}
 				}
 			}
 
@@ -322,7 +329,7 @@ namespace HoneyHarvestPredictor
 		/// <summary>Event handler for after a game location is added or removed (including building interiors).</summary>
 		/// <param name="sender">The event sender.</param>
 		/// <param name="e">The event arguments.</param>
-		internal static void OnLocationListChanged(object sender, LocationListChangedEventArgs e)
+		internal static void OnLocationListChanged(object? sender, LocationListChangedEventArgs e)
 		{
 			foreach (GameLocation addedLocation in e.Added.Where(Utilities.IsLocationWithBeeHouses))
 			{
@@ -410,7 +417,7 @@ namespace HoneyHarvestPredictor
 
 			foreach (KeyValuePair<string, HashSet<SObject>> kvp in beeHousesReady)
 			{
-				GameLocation location = Utilities.FetchLocationByName(kvp.Key);
+				GameLocation? location = Utilities.FetchLocationByName(kvp.Key);
 
 				if (location == null)
 				{
@@ -508,7 +515,7 @@ namespace HoneyHarvestPredictor
 
 				Log($"{nameof(UpdateBeeHousesNearLocationTiles)} - Found {beeHousesToUpdate.Count} ready bee houses that need updating in {updateLocationName} location.");
 
-				GameLocation updateLocation = Utilities.FetchLocationByName(updateLocationName);
+				GameLocation? updateLocation = Utilities.FetchLocationByName(updateLocationName);
 
 				if (updateLocation == null)
 				{
@@ -544,7 +551,10 @@ namespace HoneyHarvestPredictor
 				// If a bee house no longer qualifies in any way, we'll remove it after we go through the list we were given
 				if (beeHouse == null || !beeHouse.readyForHarvest.Value || beeHouse.QualifiedItemId != Constants.beeHouseQualifiedItemID)
 				{
-					invalidBeeHouses.Add(beeHouse);
+					if (beeHouse != null)
+					{
+						invalidBeeHouses.Add(beeHouse);
+					}
 
 					// If the issue is just that the bee house was harvested, then no log entry should be made
 					if (beeHouse?.readyForHarvest.Value == false)
@@ -562,7 +572,7 @@ namespace HoneyHarvestPredictor
 				// Note that if another mod patches this method - such as 'Better Beehouses' - we'll still get a `Crop` back, but it might not be a flower,
 				// and/or it might not be in a standard HoeDirt instance.
 				Crop closeFlower = Utility.findCloseFlower(location, beeHouse.TileLocation, flowerRange, (Crop crop) => !crop.forageCrop.Value);
-				SObject flowerIngredient = null;
+				SObject? flowerIngredient = null;
 				string flowerHarvestName = String.Empty;
 
 				// If we found a qualifying flower crop with an assigned harvest item, then get its harvested object form.

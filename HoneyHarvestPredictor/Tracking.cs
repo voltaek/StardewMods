@@ -91,7 +91,7 @@ namespace HoneyHarvestPredictor
 		/// </summary>
 		/// <param name="tracked">The tracked object of which to run its listener unsubscribing action.</param>
 		/// <param name="locationName">(Optional) The location name the object is indexed under, if known.</param>
-		internal static void CleanupListener(IHaveModData tracked, string locationName = null)
+		internal static void CleanupListener(IHaveModData tracked, string? locationName = null)
 		{
 			if (!tracked.modData.Keys.Contains(Constants.ModDataKey_TrackingGuid))
 			{
@@ -111,15 +111,16 @@ namespace HoneyHarvestPredictor
 		/// </summary>
 		/// <param name="locationName">(Optional) The location to limit the cleanup to.</param>
 		/// <param name="trackingGuid">(Optional) The object GUID to limit the cleanup to.</param>
-		internal static void CleanupAllListeners(string locationName = null, Guid trackingGuid = default)
+		internal static void CleanupAllListeners(string? locationName = null, Guid trackingGuid = default)
 		{
 			// Wrapper to catch any exceptions from the unsubscribing and log them
-			Action<Action> runActionTryCatch = (Action act) => {
+			static void runActionTryCatch(Action act)
+			{
 				try
 				{
 					act();
 				}
-				catch (Exception ex)
+				catch (Exception? ex)
 				{
 					StringBuilder sb = new();
 					while (ex != null)
@@ -127,9 +128,9 @@ namespace HoneyHarvestPredictor
 						sb.Append($"{ex.GetType().Name} - {ex.Message}\n\nStack Trace: {ex.StackTrace}\n\n");
 						ex = ex.InnerException;
 					}
-					Log($"{nameof(CleanupAllListeners)} - Exception while cleaning up:\n{sb.ToString()}");
+					Log($"{nameof(CleanupAllListeners)} - Exception while cleaning up:\n{sb}");
 				}
-			};
+			}
 
 			// If we have both params, then we don't need to search by looping
 			if (locationName != null && trackingGuid != Guid.Empty)
@@ -305,15 +306,11 @@ namespace HoneyHarvestPredictor
 			}
 
 			// Only do this check if BB marked it as a giant crop.
-			if (!wasFound && sourceType_BB == "GiantCrop")
+			if (!wasFound && sourceType_BB == "GiantCrop"
+				&& location.resourceClumps.FirstOrDefault(x => x is GiantCrop && x.Tile == searchPosition) is GiantCrop giantCrop)
 			{
-				GiantCrop giantCrop = location.resourceClumps.FirstOrDefault(x => x is GiantCrop && x.Tile == searchPosition) as GiantCrop;
-
-				if (giantCrop != null)
-				{
-					wasFound = true;
-					wasAdded = TrackGiantCrop(location.NameOrUniqueName, giantCrop);
-				}
+				wasFound = true;
+				wasAdded = TrackGiantCrop(location.NameOrUniqueName, giantCrop);
 			}
 
 			if (wasAdded)
@@ -358,7 +355,7 @@ namespace HoneyHarvestPredictor
 			}
 
 			// `HoeDirt.netCrop` is private, so we have to get it indirectly.
-			NetRef<Crop> dirtNetCrop = dirt.NetFields.GetFields().FirstOrDefault(x => x.Name == Constants.HoeDirtNetCropNetFieldName) as NetRef<Crop>;
+			NetRef<Crop>? dirtNetCrop = dirt.NetFields.GetFields().FirstOrDefault(x => x.Name == Constants.HoeDirtNetCropNetFieldName) as NetRef<Crop>;
 
 			if (dirtNetCrop?.Value == null)
 			{
@@ -374,7 +371,7 @@ namespace HoneyHarvestPredictor
 
 			// Wire up an event listener for if the dirt's crop property changes so we can stop tracking it if it's harvested/gone.
 			// We define the listener after init so we that we can unsubscribe from listening within the listener body.
-			FieldChange<NetRef<Crop>, Crop> dirtNetCropFieldChange = null;
+			FieldChange<NetRef<Crop>, Crop>? dirtNetCropFieldChange = null;
 			Guid trackingGuid = GetTrackingGuid(dirt);
 			string day = Utilities.UniqueDay;
 
@@ -456,7 +453,7 @@ namespace HoneyHarvestPredictor
 			// We define the listener after init so we that we can unsubscribe from listening within the listener body.
 			// NOTE - When the tree is shaken (which removes all fruit), `Clear()` is called on the `NetList`, which replaces it with an empty list,
 			// which means we can just observe this event and not have to observe `OnElementChanged`, too.
-			NetList<Item, NetRef<Item>>.ArrayReplacedEvent fruitArrayReplacedEvent = null;
+			NetList<Item, NetRef<Item>>.ArrayReplacedEvent? fruitArrayReplacedEvent = null;
 			Guid trackingGuid = GetTrackingGuid(fruitTree);
 			string day = Utilities.UniqueDay;
 
@@ -477,8 +474,11 @@ namespace HoneyHarvestPredictor
 
 				if ((list?.Count ?? 0) == 0)
 				{
-					// Unsubscribe so we don't attempt to remove tracking again
-					list.OnArrayReplaced -= fruitArrayReplacedEvent;
+					if (list != null)
+					{
+						// Unsubscribe so we don't attempt to remove tracking again
+						list.OnArrayReplaced -= fruitArrayReplacedEvent;
+					}
 
 					// Remove from EOD cleanup tasks
 					RemoveListenerCleanup(locationName, trackingGuid);
@@ -540,7 +540,7 @@ namespace HoneyHarvestPredictor
 			// Note that `Bush.readyForHarvest()` is new as of Stardew Valley v1.6.9+, and Better Beehouses will switch to referencing it to calc bushes being eligible or not.
 			// Note that if you try to chop down a bush that is in the ground, the first hit will just harvest it, anyways.
 			// We define the listener after init so we that we can unsubscribe from listening within the listener body.
-			FieldChange<NetInt, int> bushTileSheetOffsetFieldChange = null;
+			FieldChange<NetInt, int>? bushTileSheetOffsetFieldChange = null;
 			Guid trackingGuid = GetTrackingGuid(bush);
 			string day = Utilities.UniqueDay;
 
@@ -621,7 +621,7 @@ namespace HoneyHarvestPredictor
 
 			// Wire up an event listener for if the pot's bush is removed so we can stop tracking it.
 			// We define the listener after init so we that we can unsubscribe from listening within the listener body.
-			FieldChange<NetRef<Bush>, Bush> potBushFieldChange = null;
+			FieldChange<NetRef<Bush>, Bush>? potBushFieldChange = null;
 			Guid trackingGuid = GetTrackingGuid(pot);
 			string day = Utilities.UniqueDay;
 
@@ -705,7 +705,7 @@ namespace HoneyHarvestPredictor
 
 			// Wire up an event listener for if the pot's forage is removed so we can stop tracking it.
 			// We define the listener after init so we that we can unsubscribe from listening within the listener body.
-			FieldChange<NetRef<SObject>, SObject> potHeldObjectFieldChange = null;
+			FieldChange<NetRef<SObject>, SObject>? potHeldObjectFieldChange = null;
 			Guid trackingGuid = GetTrackingGuid(pot);
 			string day = Utilities.UniqueDay;
 
@@ -787,7 +787,7 @@ namespace HoneyHarvestPredictor
 			// Wire up an event listener for if the giant crop drops to zero or less health so we can stop tracking it.
 			// This occurs before it's removed from its location's resource clumps list.
 			// We define the listener after init so we that we can unsubscribe from listening within the listener body.
-			FieldChange<NetFloat, float> giantCropHealthFieldChange = null;
+			FieldChange<NetFloat, float>? giantCropHealthFieldChange = null;
 			Guid trackingGuid = GetTrackingGuid(giantCrop);
 			string day = Utilities.UniqueDay;
 
@@ -832,7 +832,7 @@ namespace HoneyHarvestPredictor
 						{
 							if (x == 0 || y == 0 || x == (giantCrop.width.Value - 1) || y == (giantCrop.height.Value - 1))
 							{
-								Vector2 borderTile = new Vector2(giantCrop.Tile.X + x, giantCrop.Tile.Y + y);
+								Vector2 borderTile = new(giantCrop.Tile.X + x, giantCrop.Tile.Y + y);
 
 								// Add the tile to our collection to be updated shortly (outside of this delegate)
 								HoneyUpdater.ScheduleToUpdateBeeHousesNearLocationTile(locationName, borderTile);
