@@ -256,37 +256,44 @@ namespace HoneyHarvestPredictor
 			{
 				Log($"{nameof(OnObjectListChanged)} - Found {removedIndoorPots.Count()} removed garden pots to attempt to remove from tracking in {locationName} location (modded checks)");
 
-				List<IndoorPot> removedLocationForagePots = nearbyForageIndoorPots[locationName].Where(removedIndoorPots.Contains).ToList();
-				List<IndoorPot> removedLocationBushPots = nearbyBushIndoorPots[locationName].Where(removedIndoorPots.Contains).ToList();
-
-				if (removedLocationForagePots.Any())
+				if (nearbyForageIndoorPots.ContainsKey(locationName))
 				{
-					Log($"{nameof(OnObjectListChanged)} - Removed {removedLocationForagePots.Count()} of the removed forage-holding indoor pots in {locationName} location"
-						+ $" @ [{String.Join(", ", removedLocationForagePots.Select(y => y.TileLocation))}].");
+					List<IndoorPot> removedLocationForagePots = nearbyForageIndoorPots[locationName].Where(removedIndoorPots.Contains).ToList();
 
-					// Hold onto where in the GameLocation we need to update near
-					updateNearTiles.AddRange(removedLocationForagePots.Select(x => x.TileLocation));
+					if (removedLocationForagePots.Any())
+					{
+						Log($"{nameof(OnObjectListChanged)} - Removed {removedLocationForagePots.Count()} of the removed forage-holding indoor pots in {locationName} location"
+							+ $" @ [{String.Join(", ", removedLocationForagePots.Select(y => y.TileLocation))}].");
 
-					// Remove the indoor pot(s) from being tracked
-					removedLocationForagePots.ForEach(pot => Tracking.CleanupListener(pot, locationName));
-					nearbyForageIndoorPots[locationName].RemoveWhere(removedLocationForagePots.Contains);
+						// Hold onto where in the GameLocation we need to update near
+						updateNearTiles.AddRange(removedLocationForagePots.Select(x => x.TileLocation));
+
+						// Remove the indoor pot(s) from being tracked
+						removedLocationForagePots.ForEach(pot => Tracking.CleanupListener(pot, locationName));
+						nearbyForageIndoorPots[locationName].RemoveWhere(removedLocationForagePots.Contains);
+					}
 				}
 
-				if (removedLocationBushPots.Any())
+				if (nearbyBushIndoorPots.ContainsKey(locationName))
 				{
-					Log($"{nameof(OnObjectListChanged)} - Removed {removedLocationBushPots.Count()} of the removed bush-hosting indoor pots in {locationName} location"
-						+ $" @ [{String.Join(", ", removedLocationBushPots.Select(y => y.TileLocation))}]");
+					List<IndoorPot> removedLocationBushPots = nearbyBushIndoorPots[locationName].Where(removedIndoorPots.Contains).ToList();
 
-					// Hold onto where in the GameLocation we need to update near
-					updateNearTiles.AddRange(removedLocationBushPots.Select(x => x.TileLocation));
+					if (removedLocationBushPots.Any())
+					{
+						Log($"{nameof(OnObjectListChanged)} - Removed {removedLocationBushPots.Count()} of the removed bush-hosting indoor pots in {locationName} location"
+							+ $" @ [{String.Join(", ", removedLocationBushPots.Select(y => y.TileLocation))}]");
 
-					// Remove the indoor pot(s) from being tracked
-					removedLocationBushPots.ForEach(pot => Tracking.CleanupListener(pot, locationName));
-					nearbyBushIndoorPots[locationName].RemoveWhere(removedLocationBushPots.Contains);
+						// Hold onto where in the GameLocation we need to update near
+						updateNearTiles.AddRange(removedLocationBushPots.Select(x => x.TileLocation));
 
-					// Also need to remove the bush(es) in the indoor pot(s) from being tracked, since we have to track them for being harvested
-					removedLocationBushPots.ForEach(pot => Tracking.CleanupListener(pot.bush.Value, locationName));
-					nearbyBushes[locationName].RemoveWhere(bush => removedLocationBushPots.Select(pot => pot.bush.Value).Contains(bush));
+						// Remove the indoor pot(s) from being tracked
+						removedLocationBushPots.ForEach(pot => Tracking.CleanupListener(pot, locationName));
+						nearbyBushIndoorPots[locationName].RemoveWhere(removedLocationBushPots.Contains);
+
+						// Also need to remove the bush(es) in the indoor pot(s) from being tracked, since we have to track them for being harvested
+						removedLocationBushPots.ForEach(pot => Tracking.CleanupListener(pot.bush.Value, locationName));
+						nearbyBushes[locationName].RemoveWhere(bush => removedLocationBushPots.Select(pot => pot.bush.Value).Contains(bush));
+					}
 				}
 			}
 
