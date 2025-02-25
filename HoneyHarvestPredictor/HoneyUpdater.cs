@@ -186,9 +186,9 @@ namespace HoneyHarvestPredictor
 			if (e.Removed.Any(x => x.Value.QualifiedItemId == Constants.beeHouseQualifiedItemID))
 			{
 				// Find all removed bee houses so we can remove them from our tracking dictionaries
-				IEnumerable<SObject> removedBeeHouses = e.Removed.Select(y => y.Value).Where(z => z.QualifiedItemId == Constants.beeHouseQualifiedItemID);
+				List<SObject> removedBeeHouses = e.Removed.Select(y => y.Value).Where(z => z.QualifiedItemId == Constants.beeHouseQualifiedItemID).ToList();
 
-				Log($"{nameof(OnObjectListChanged)} - Found {removedBeeHouses.Count()} removed bee houses to attempt to remove from tracking in {locationName} location");
+				Log($"{nameof(OnObjectListChanged)} - Found {removedBeeHouses.Count} removed bee houses to attempt to remove from tracking in {locationName} location");
 
 				if (beeHousesReady.ContainsKey(locationName) && beeHousesReady[locationName].Any(removedBeeHouses.Contains))
 				{
@@ -207,18 +207,13 @@ namespace HoneyHarvestPredictor
 			// Collect all tiles to update around for this location
 			HashSet<Vector2> updateNearTiles = new();
 
-			IEnumerable<IndoorPot>? removedIndoorPots = null;
-
-			if (e.Removed.Any(x => x.Value.QualifiedItemId == Constants.gardenPotQualifiedItemID))
-			{
-				// If some objects have pot IDs, then extract them typed
-				removedIndoorPots = e.Removed.Where(x => x.Value.QualifiedItemId == Constants.gardenPotQualifiedItemID).Select(x => x.Value).OfType<IndoorPot>();
-			}
+			// Attempt to collect any removed pot objects
+			List<IndoorPot> removedIndoorPots = e.Removed.Where(x => x.Value.QualifiedItemId == Constants.gardenPotQualifiedItemID).Select(x => x.Value).OfType<IndoorPot>().ToList();
 
 			// If some pots were removed, check for vanilla situations we need to handle, such as a bomb destroying a pot and its dirt all at once, which skips the harvesting trigger.
-			if (removedIndoorPots?.Any() ?? false && nearbyFlowerDirt.ContainsKey(locationName))
+			if (removedIndoorPots.Any() && nearbyFlowerDirt.ContainsKey(locationName))
 			{
-				Log($"{nameof(OnObjectListChanged)} - Found {removedIndoorPots.Count()} removed garden pots to attempt to remove from tracking in {locationName} location (vanilla checks)");
+				Log($"{nameof(OnObjectListChanged)} - Found {removedIndoorPots.Count} removed garden pots to attempt to remove from tracking in {locationName} location (vanilla checks)");
 
 				List<HoeDirt> removedLocationPotDirt = nearbyFlowerDirt[locationName].Where(dirt => removedIndoorPots.Contains(dirt.Pot)).ToList();
 
@@ -252,9 +247,9 @@ namespace HoneyHarvestPredictor
 			// Even if the held object is ejected from the same hit that picks up the pot, the held object field of the pot isn't updated,
 			// so it's required that we watch for them being removed and also that we not trust their held object property at that point.
 			// If a pot is blown up with a bomb, it is removed immediately, so these checks will also handle that condition for forage and bush pots.
-			if (removedIndoorPots?.Any() ?? false && (nearbyForageIndoorPots.ContainsKey(locationName) || nearbyBushIndoorPots.ContainsKey(locationName)))
+			if (removedIndoorPots.Any() && (nearbyForageIndoorPots.ContainsKey(locationName) || nearbyBushIndoorPots.ContainsKey(locationName)))
 			{
-				Log($"{nameof(OnObjectListChanged)} - Found {removedIndoorPots.Count()} removed garden pots to attempt to remove from tracking in {locationName} location (modded checks)");
+				Log($"{nameof(OnObjectListChanged)} - Found {removedIndoorPots.Count} removed garden pots to attempt to remove from tracking in {locationName} location (modded checks)");
 
 				if (nearbyForageIndoorPots.ContainsKey(locationName))
 				{
@@ -300,15 +295,15 @@ namespace HoneyHarvestPredictor
 			// When BB installed - Check our list of bare forage to see if any were removed
 			if (e.Removed.Any(x => x.Value.CanBeGrabbed && Utilities.IsHoneyFlavorSource(x.Value)) && nearbyForageObjects.ContainsKey(locationName))
 			{
-				IEnumerable<SObject> removedForageObjects = e.Removed.Select(x => x.Value).Where(obj => obj.CanBeGrabbed && Utilities.IsHoneyFlavorSource(obj));
+				List<SObject> removedForageObjects = e.Removed.Select(x => x.Value).Where(obj => obj.CanBeGrabbed && Utilities.IsHoneyFlavorSource(obj)).ToList();
 
-				Log($"{nameof(OnObjectListChanged)} - Found {removedForageObjects.Count()} forage objects to attempt to remove from tracking in {locationName} location");
+				Log($"{nameof(OnObjectListChanged)} - Found {removedForageObjects.Count} forage objects to attempt to remove from tracking in {locationName} location");
 
 				if (removedForageObjects.Any())
 				{
-					IEnumerable<SObject> removedLocationForage = nearbyForageObjects[locationName].Where(removedForageObjects.Contains);
+					List<SObject> removedLocationForage = nearbyForageObjects[locationName].Where(removedForageObjects.Contains).ToList();
 
-					Log($"{nameof(OnObjectListChanged)} - Removed {removedLocationForage.Count()} of the harvested bare forage in {locationName} location"
+					Log($"{nameof(OnObjectListChanged)} - Removed {removedLocationForage.Count} of the harvested bare forage in {locationName} location"
 						+ $" @ [{String.Join(", ", removedLocationForage.Select(y => y.TileLocation))}]");
 
 					// Hold onto where in the GameLocation we need to update near
